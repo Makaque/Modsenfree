@@ -1,43 +1,31 @@
-package ca.mktsk.modsenfree
+package ca.mktsk.modsenfree.app
 
 
-import scalafx.application.JFXApp
-import scalafx.application.JFXApp.PrimaryStage
-import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
-import scalafx.beans.value.ObservableValue
-import scalafx.collections.ObservableBuffer
-import scalafx.geometry.Insets
-import scalafx.scene.Scene
-import scalafx.scene.control.cell.CheckBoxTableCell
-import scalafx.scene.control.{ScrollPane, TableColumn, TableView}
-import scalafx.scene.effect.DropShadow
-import scalafx.scene.layout.{FlowPane, HBox, VBox}
-import scalafx.scene.paint.Color._
-import scalafx.scene.paint._
-import scalafx.scene.text.Text
 import java.lang.{Boolean => Jbool}
 
-import scalafx.scene.control.TableColumn.CellEditEvent
-import scalafx.scene.control.cell.CheckBoxTreeTableCell.JBoolean
+import ca.mktsk.modsenfree.mod.Mod
+import scalafx.application.JFXApp
+import scalafx.application.JFXApp.PrimaryStage
+import scalafx.beans.property.{BooleanProperty, StringProperty}
+import scalafx.beans.value.ObservableValue
+import scalafx.collections.ObservableBuffer
+import scalafx.scene.Scene
+import scalafx.scene.control.cell.CheckBoxTableCell
+import scalafx.scene.control.{TableColumn, TableView}
 
-import scala.util.Random
-
-
-case class Mod(name: String, enabled: Boolean)
 
 case class ObservableMod(name: StringProperty, enabled: BooleanProperty)
 
-object Mod {
-  def asObservableMod(mod: Mod): ObservableMod = {
-    val name = StringProperty(mod.name)
-    val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], "Enabled", mod.enabled.asInstanceOf[Jbool])
-    ObservableMod(name, enabled)
-  }
-}
 
 object ObservableMod{
   def asMod(observableMod: ObservableMod): Mod = {
     Mod(observableMod.name.value, observableMod.enabled.value)
+  }
+
+  def fromMod(mod: Mod): ObservableMod = {
+    val name = StringProperty(mod.name)
+    val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], "Enabled", mod.enabled.asInstanceOf[Jbool])
+    ObservableMod(name, enabled)
   }
 }
 
@@ -55,8 +43,8 @@ object Modsenfree extends JFXApp {
     scene = new Scene(600, 600) {
       //      fill = Color.rgb(38, 38, 38)
       private val modData: ObservableBuffer[ObservableMod] = ObservableBuffer(
-        Mod.asObservableMod(Mod("bigger text", enabled = true)),
-        Mod.asObservableMod(Mod("run always", enabled = false))
+        ObservableMod.fromMod(Mod("bigger text", enabled = true)),
+        ObservableMod.fromMod(Mod("run always", enabled = false))
       )
       modData.foreach(oMod => {
         oMod.enabled.onChange{
