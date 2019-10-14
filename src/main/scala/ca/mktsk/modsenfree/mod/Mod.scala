@@ -1,3 +1,5 @@
 package ca.mktsk.modsenfree.mod
 
-case class Mod(name: String, enabled: Boolean)
+import java.io.File
+
+case class Mod(name: String, enabled: Boolean, file: File)
