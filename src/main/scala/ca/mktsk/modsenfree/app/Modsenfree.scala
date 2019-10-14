@@ -1,6 +1,7 @@
 package ca.mktsk.modsenfree.app
 
 
+import java.io.File
 import java.lang.{Boolean => Jbool}
 
 import ca.mktsk.modsenfree.mod.Mod
@@ -14,18 +15,19 @@ import scalafx.scene.control.cell.CheckBoxTableCell
 import scalafx.scene.control.{TableColumn, TableView}
 
 
-case class ObservableMod(name: StringProperty, enabled: BooleanProperty)
+case class ObservableMod(name: StringProperty, enabled: BooleanProperty, file: File)
 
 
 object ObservableMod{
   def asMod(observableMod: ObservableMod): Mod = {
-    Mod(observableMod.name.value, observableMod.enabled.value)
+    Mod(observableMod.name.value, observableMod.enabled.value, observableMod.file)
   }
 
   def fromMod(mod: Mod): ObservableMod = {
     val name = StringProperty(mod.name)
     val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], "Enabled", mod.enabled.asInstanceOf[Jbool])
-    ObservableMod(name, enabled)
+    val file = mod.file
+    ObservableMod(name, enabled, file)
   }
 }
 
@@ -43,8 +45,8 @@ object Modsenfree extends JFXApp {
     scene = new Scene(600, 600) {
       //      fill = Color.rgb(38, 38, 38)
       private val modData: ObservableBuffer[ObservableMod] = ObservableBuffer(
-        ObservableMod.fromMod(Mod("bigger text", enabled = true)),
-        ObservableMod.fromMod(Mod("run always", enabled = false))
+        ObservableMod.fromMod(Mod("bigger text", enabled = true, new File("faketestfile"))),
+        ObservableMod.fromMod(Mod("run always", enabled = false, new File("faketestfile2")))
       )
       modData.foreach(oMod => {
         oMod.enabled.onChange{
