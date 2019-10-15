@@ -12,7 +12,10 @@ import scala.util.{Failure, Try}
 object FileIO {
   def getFileContent(file: File): Try[String] = {
     Try {
-      Source.fromFile(file).mkString
+      val buffer = Source.fromFile(file)
+      val content = buffer.mkString
+      buffer.close()
+      content
     }
   }
 
@@ -37,7 +40,10 @@ object FileIO {
   def writeMod(mod: Mod): Try[Mod] = {
     Try {
       val writer = new PrintWriter(mod.file)
+      System.out.println("Mod to Json")
+      System.out.println(JsonUtils.modToJson(mod).toString())
       writer.write(JsonUtils.modToJson(mod).toString())
+      writer.close()
       mod
     }
   }

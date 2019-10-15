@@ -18,8 +18,6 @@ import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.cell.CheckBoxTableCell
 import scalafx.scene.control.{Alert, ButtonType, TableColumn, TableView}
 
-import scala.util.Failure
-
 
 case class ObservableMod(name: StringProperty, enabled: BooleanProperty, file: File)
 
@@ -50,6 +48,11 @@ object Modsenfree extends JFXApp {
     list.map(_._1).foldRight("") { case (file, acc) => acc + file.getCanonicalPath + System.lineSeparator() }
   }
 
+  def errorAlert(message: String): Unit ={
+
+    new Alert(AlertType.Error, message, ButtonType.OK).showAndWait()
+  }
+
   stage = new PrimaryStage {
     //    initStyle(StageStyle.Unified)
     title = "Modsenfree Mod Loader"
@@ -78,6 +81,10 @@ object Modsenfree extends JFXApp {
       modData.foreach(oMod => {
         oMod.enabled.onChange {
           println("Changed" + oMod.name)
+          val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
+          if(tryWrite.isFailure){
+            errorAlert("Couldn't save " + oMod.name)
+          }
         }
       })
 
@@ -108,18 +115,17 @@ object Modsenfree extends JFXApp {
       if (failedModDefinitionFiles.nonEmpty) {
         val msg = "These directories in the mods directory do not have a " + Constants.modDefinitionFilename + " file:" + System.lineSeparator() +
           errorFilesMessage(failedModDefinitionFiles)
-
-        new Alert(AlertType.Error, msg, ButtonType.OK).showAndWait()
+        errorAlert(msg)
       }
       if (failedModRead.nonEmpty) {
         val msg = "Could not read " + Constants.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
           errorFilesMessage(failedModRead)
-        new Alert(AlertType.Error, msg, ButtonType.OK).showAndWait()
+        errorAlert(msg)
       }
       if (failedModParse.nonEmpty) {
         val msg = "The " + Constants.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
           errorFilesMessage(failedModParse)
-        new Alert(AlertType.Error, msg, ButtonType.OK).showAndWait()
+        errorAlert(msg)
       }
     }
   }
