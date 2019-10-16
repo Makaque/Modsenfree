@@ -19,19 +19,20 @@ import scalafx.scene.control.cell.CheckBoxTableCell
 import scalafx.scene.control.{Alert, ButtonType, TableColumn, TableView}
 
 
-case class ObservableMod(name: StringProperty, enabled: BooleanProperty, file: File)
+case class ObservableMod(id: String, name: StringProperty, enabled: BooleanProperty, file: File)
 
 
 object ObservableMod {
   def asMod(observableMod: ObservableMod): Mod = {
-    Mod(observableMod.name.value, observableMod.enabled.value, observableMod.file)
+    Mod(observableMod.id, observableMod.name.value, observableMod.enabled.value, observableMod.file)
   }
 
   def fromMod(mod: Mod): ObservableMod = {
-    val name = StringProperty(mod.name)
-    val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], StringUtils.titleWordCap(Mod.enabledFieldName), mod.enabled.asInstanceOf[Jbool])
+    val id = mod.id
+    val name = StringProperty(mod.displayName)
+    val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], StringUtils.titleWordCap(Mod.field.enabled), mod.enabled.asInstanceOf[Jbool])
     val file = mod.file
-    ObservableMod(name, enabled, file)
+    ObservableMod(id, name, enabled, file)
   }
 }
 
@@ -44,45 +45,44 @@ object ObservableMod {
 // mods display as list with checkboxes in javafx window
 // button to patch/unpatch game file (cli C# file) test in linux with mono
 object Modsenfree extends JFXApp {
+
   def errorFilesMessage(list: List[(File, Throwable)]): String = {
     list.map(_._1).foldRight("") { case (file, acc) => acc + file.getCanonicalPath + System.lineSeparator() }
   }
 
-  def errorAlert(message: String): Unit ={
-
+  def errorAlert(message: String): Unit = {
     new Alert(AlertType.Error, message, ButtonType.OK).showAndWait()
   }
 
+  private val modDirectories = FileIO.getSubdirectories(new File(Constants.modSearchDirectory))
+    .recover { case _: Throwable => throw NotDirectoryException("Could not find mod directory") }
+
+  private val attemptModDefinitionFiles = modDirectories.getOrElse(List.empty)
+    .map(modDir => (modDir, FileIO.getModDefinitionFile(modDir, Constants.modDefinitionFilename)))
+
+  private val (failedModDefinitionFiles, modDefinitionFiles) = Exceptions.splitWithCause(attemptModDefinitionFiles)
+
+  private val (failedModRead, modStrings) = Exceptions.splitWithCause(modDefinitionFiles.map(file =>
+    (file, FileIO.getFileContent(file).map(s => (s, file))
+    )))
+
+  private val (failedModParse, mods) = Exceptions.splitWithCause(modStrings.map { case (ms, f) => (f, JsonUtils.jsonStringToMod(ms, f)) })
+
+  private val observableMods = mods.map(mod => ObservableMod.fromMod(mod))
+
+  private val modData: ObservableBuffer[ObservableMod] = ObservableBuffer(observableMods)
+
   stage = new PrimaryStage {
     //    initStyle(StageStyle.Unified)
-    title = "Modsenfree Mod Loader"
+    title = Constants.title
     scene = new Scene(600, 600) {
-      //      fill = Color.rgb(38, 38, 38)
-      private val modDirectories = FileIO.getSubdirectories(new File(Constants.modSearchDirectory))
-        .recover { case _: Throwable => throw NotDirectoryException("Could not find mod directory") }
-
-      private val attemptModDefinitionFiles = modDirectories.getOrElse(List.empty)
-        .map(modDir => (modDir, FileIO.getModDefinitionFile(modDir, Constants.modDefinitionFilename)))
-      private val (failedModDefinitionFiles, modDefinitionFiles) = Exceptions.splitWithCause(attemptModDefinitionFiles)
-      //      private val modDefinitionFiles: List[File] = attemptModDefinitionFiles.collect{ case (_, Success(file)) => file}
-      private val (failedModRead, modStrings) = Exceptions.splitWithCause(modDefinitionFiles.map(file =>
-        (file, FileIO.getFileContent(file).map(s => (s, file))
-        )))
-
-      private val (failedModParse, mods) = Exceptions.splitWithCause(modStrings.map { case (ms, f) => (f, JsonUtils.jsonStringToMod(ms, f)) })
-      private val observableMods = mods.map(mod => ObservableMod.fromMod(mod))
 
 
-      private val modData: ObservableBuffer[ObservableMod] = ObservableBuffer(observableMods)
-      private val mData: ObservableBuffer[ObservableMod] = ObservableBuffer(
-        ObservableMod.fromMod(Mod("bigger text", enabled = true, new File("faketestfile"))),
-        ObservableMod.fromMod(Mod("run always", enabled = false, new File("faketestfile2")))
-      )
       modData.foreach(oMod => {
         oMod.enabled.onChange {
           println("Changed" + oMod.name)
           val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
-          if(tryWrite.isFailure){
+          if (tryWrite.isFailure) {
             errorAlert("Couldn't save " + oMod.name)
           }
         }
@@ -93,10 +93,10 @@ object Modsenfree extends JFXApp {
         columnResizePolicy = TableView.ConstrainedResizePolicy
 
 
-        private val nameColumn = new TableColumn[ObservableMod, String](StringUtils.titleWordCap(Mod.nameFieldName)) {
+        private val nameColumn = new TableColumn[ObservableMod, String](Mod.display.displayName) {
           cellValueFactory = cdf => cdf.value.name
         }
-        private val enabledColumn: TableColumn[ObservableMod, Jbool] = new TableColumn[ObservableMod, Jbool](StringUtils.titleWordCap(Mod.enabledFieldName)) {
+        private val enabledColumn: TableColumn[ObservableMod, Jbool] = new TableColumn[ObservableMod, Jbool](Mod.display.enabled) {
           cellValueFactory = _.value.enabled
             .asInstanceOf[ObservableValue[Jbool, Jbool]]
           cellFactory = CheckBoxTableCell.forTableColumn(this)
@@ -112,22 +112,22 @@ object Modsenfree extends JFXApp {
       }
       root = modTableView
 
-      if (failedModDefinitionFiles.nonEmpty) {
-        val msg = "These directories in the mods directory do not have a " + Constants.modDefinitionFilename + " file:" + System.lineSeparator() +
-          errorFilesMessage(failedModDefinitionFiles)
-        errorAlert(msg)
-      }
-      if (failedModRead.nonEmpty) {
-        val msg = "Could not read " + Constants.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
-          errorFilesMessage(failedModRead)
-        errorAlert(msg)
-      }
-      if (failedModParse.nonEmpty) {
-        val msg = "The " + Constants.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
-          errorFilesMessage(failedModParse)
-        errorAlert(msg)
-      }
     }
+  }
+  if (failedModDefinitionFiles.nonEmpty) {
+    val msg = "These directories in the mods directory do not have a " + Constants.modDefinitionFilename + " file:" + System.lineSeparator() +
+      errorFilesMessage(failedModDefinitionFiles)
+    errorAlert(msg)
+  }
+  if (failedModRead.nonEmpty) {
+    val msg = "Could not read " + Constants.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
+      errorFilesMessage(failedModRead)
+    errorAlert(msg)
+  }
+  if (failedModParse.nonEmpty) {
+    val msg = "The " + Constants.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
+      errorFilesMessage(failedModParse)
+    errorAlert(msg)
   }
 }
 

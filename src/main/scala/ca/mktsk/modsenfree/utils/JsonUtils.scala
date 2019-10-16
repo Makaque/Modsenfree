@@ -21,8 +21,9 @@ object JsonUtils {
 
   def modToJson(mod: Mod): Value = {
     ujson.Obj(
-      "name" -> ujson.Str(mod.name),
-      "enabled" -> ujson.Bool(mod.enabled)
+      Mod.field.id -> ujson.Str(mod.id),
+      Mod.field.displayName -> ujson.Str(mod.displayName),
+      Mod.field.enabled -> ujson.Bool(mod.enabled)
     )
   }
 
@@ -30,12 +31,13 @@ object JsonUtils {
     Try {
       System.out.println(json)
       System.out.println(json.obj)
-      System.out.println(json.obj.get("name"))
+      System.out.println(json.obj.get(Mod.field.displayName))
       System.out.println(json.obj.keySet)
-      val name = json.obj.get("name").get.str
-      val enabled = json.obj.get("enabled").get.bool
+      val id = json.obj.get(Mod.field.id).get.str
+      val name = json.obj.get(Mod.field.displayName).get.str
+      val enabled = json.obj.get(Mod.field.enabled).get.bool
 //      val file = new File(json.obj.get("file").str)
-      Mod(name, enabled, file)
+      Mod(id, name, enabled, file)
     }
   }
 
