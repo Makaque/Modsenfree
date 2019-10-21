@@ -17,6 +17,9 @@ import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.cell.CheckBoxTableCell
 import scalafx.scene.control.{Alert, ButtonType, TableColumn, TableView}
+import sys.process._
+
+import scala.util.Try
 
 
 case class ObservableMod(id: String, name: StringProperty, enabled: BooleanProperty, file: File)
@@ -33,6 +36,31 @@ object ObservableMod {
     val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], StringUtils.titleWordCap(Mod.field.enabled), mod.enabled.asInstanceOf[Jbool])
     val file = mod.file
     ObservableMod(id, name, enabled, file)
+  }
+}
+
+object UIComponents {
+  def modTableView(modData: ObservableBuffer[ObservableMod]): TableView[ObservableMod] = new TableView(modData){
+    editable = true
+    columnResizePolicy = TableView.ConstrainedResizePolicy
+
+
+    private val nameColumn = new TableColumn[ObservableMod, String](Mod.display.displayName) {
+      cellValueFactory = cdf => cdf.value.name
+    }
+    private val enabledColumn: TableColumn[ObservableMod, Jbool] = new TableColumn[ObservableMod, Jbool](Mod.display.enabled) {
+      cellValueFactory = _.value.enabled
+        .asInstanceOf[ObservableValue[Jbool, Jbool]]
+      cellFactory = CheckBoxTableCell.forTableColumn(this)
+      editable = true
+      minWidth = 100
+      maxWidth = 100
+    }
+
+    columns ++= Seq(
+      enabledColumn,
+      nameColumn
+    )
   }
 }
 
@@ -82,34 +110,15 @@ object Modsenfree extends JFXApp {
         oMod.enabled.onChange {
           println("Changed" + oMod.name)
           val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
+          val bla = Process("./src/main/cs/TestSharp.exe bla").!!
+          println(bla)
           if (tryWrite.isFailure) {
             errorAlert("Couldn't save " + oMod.name)
           }
         }
       })
 
-      private val modTableView: TableView[ObservableMod] = new TableView(modData) {
-        editable = true
-        columnResizePolicy = TableView.ConstrainedResizePolicy
-
-
-        private val nameColumn = new TableColumn[ObservableMod, String](Mod.display.displayName) {
-          cellValueFactory = cdf => cdf.value.name
-        }
-        private val enabledColumn: TableColumn[ObservableMod, Jbool] = new TableColumn[ObservableMod, Jbool](Mod.display.enabled) {
-          cellValueFactory = _.value.enabled
-            .asInstanceOf[ObservableValue[Jbool, Jbool]]
-          cellFactory = CheckBoxTableCell.forTableColumn(this)
-          editable = true
-          minWidth = 100
-          maxWidth = 100
-        }
-
-        columns ++= Seq(
-          enabledColumn,
-          nameColumn
-        )
-      }
+      private val modTableView: TableView[ObservableMod] = UIComponents.modTableView(modData)
       root = modTableView
 
     }
