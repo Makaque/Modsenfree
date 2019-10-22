@@ -16,9 +16,10 @@ import scalafx.collections.ObservableBuffer
 import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.cell.CheckBoxTableCell
-import scalafx.scene.control.{Alert, ButtonType, TableColumn, TableView}
-import sys.process._
+import scalafx.scene.control._
+import scalafx.scene.layout.{HBox, Pane}
 
+import sys.process._
 import scala.util.Try
 
 
@@ -40,6 +41,11 @@ object ObservableMod {
 }
 
 object UIComponents {
+
+  def errorAlert(message: String): Unit = {
+    new Alert(AlertType.Error, message, ButtonType.OK).showAndWait()
+  }
+
   def modTableView(modData: ObservableBuffer[ObservableMod]): TableView[ObservableMod] = new TableView(modData){
     editable = true
     columnResizePolicy = TableView.ConstrainedResizePolicy
@@ -64,6 +70,29 @@ object UIComponents {
   }
 }
 
+object EventHandlers {
+  def modChanged(oMod: ObservableMod): Unit ={
+    println("Changed" + oMod.name)
+    val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
+    Try {
+      val result = Process("./src/main/cs/TestSharp.exe bla").!!.trim
+      println("result")
+      println(result.length)
+      println(result)
+      PatcherMessage.withName(result) match {
+        case PatcherMessage.RESPONDING => println("patcher responded")
+        case _ => println("patcher didn't respond with responding")
+      }
+      println(result)
+      result
+    }.recover {case _: Throwable =>
+      println("Couldn't figure out patcher message.")
+    }
+    if (tryWrite.isFailure) {
+      UIComponents.errorAlert("Couldn't save " + oMod.name)
+    }
+  }
+}
 
 // How do I want this thing to function???
 // look in mods subdirectory for available mods
@@ -76,10 +105,6 @@ object Modsenfree extends JFXApp {
 
   def errorFilesMessage(list: List[(File, Throwable)]): String = {
     list.map(_._1).foldRight("") { case (file, acc) => acc + file.getCanonicalPath + System.lineSeparator() }
-  }
-
-  def errorAlert(message: String): Unit = {
-    new Alert(AlertType.Error, message, ButtonType.OK).showAndWait()
   }
 
   private val modDirectories = FileIO.getSubdirectories(new File(Constants.modSearchDirectory))
@@ -107,27 +132,7 @@ object Modsenfree extends JFXApp {
 
 
       modData.foreach(oMod => {
-        oMod.enabled.onChange {
-          println("Changed" + oMod.name)
-          val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
-          Try {
-            val result = (Process("./src/main/cs/TestSharp.exe bla").!!).trim
-            println("result")
-            println(result.length)
-            println(result)
-            PatcherMessage.withName(result) match {
-              case PatcherMessage.RESPONDING => println("patcher responded")
-              case _ => println("patcher didn't respond with responding")
-            }
-            println(result);
-            result
-          }.recover {case t: Throwable =>
-            println("Couldn't figure out patcher message.")
-          }
-          if (tryWrite.isFailure) {
-            errorAlert("Couldn't save " + oMod.name)
-          }
-        }
+        oMod.enabled.onChange (EventHandlers.modChanged(oMod))
       })
 
       private val modTableView: TableView[ObservableMod] = UIComponents.modTableView(modData)
@@ -138,17 +143,17 @@ object Modsenfree extends JFXApp {
   if (failedModDefinitionFiles.nonEmpty) {
     val msg = "These directories in the mods directory do not have a " + Constants.modDefinitionFilename + " file:" + System.lineSeparator() +
       errorFilesMessage(failedModDefinitionFiles)
-    errorAlert(msg)
+    UIComponents.errorAlert(msg)
   }
   if (failedModRead.nonEmpty) {
     val msg = "Could not read " + Constants.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
       errorFilesMessage(failedModRead)
-    errorAlert(msg)
+    UIComponents.errorAlert(msg)
   }
   if (failedModParse.nonEmpty) {
     val msg = "The " + Constants.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
       errorFilesMessage(failedModParse)
-    errorAlert(msg)
+    UIComponents.errorAlert(msg)
   }
 }
 
