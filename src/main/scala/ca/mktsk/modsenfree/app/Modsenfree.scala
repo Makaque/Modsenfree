@@ -110,8 +110,20 @@ object Modsenfree extends JFXApp {
         oMod.enabled.onChange {
           println("Changed" + oMod.name)
           val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
-          val bla = Process("./src/main/cs/TestSharp.exe bla").!!
-          println(bla)
+          Try {
+            val result = (Process("./src/main/cs/TestSharp.exe bla").!!).trim
+            println("result")
+            println(result.length)
+            println(result)
+            PatcherMessage.withName(result) match {
+              case PatcherMessage.RESPONDING => println("patcher responded")
+              case _ => println("patcher didn't respond with responding")
+            }
+            println(result);
+            result
+          }.recover {case t: Throwable =>
+            println("Couldn't figure out patcher message.")
+          }
           if (tryWrite.isFailure) {
             errorAlert("Couldn't save " + oMod.name)
           }
