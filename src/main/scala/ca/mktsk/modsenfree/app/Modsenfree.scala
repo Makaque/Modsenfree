@@ -8,6 +8,7 @@ import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
 import ca.mktsk.modsenfree.io.FileIO
 import ca.mktsk.modsenfree.mod.{Constants, Mod}
 import ca.mktsk.modsenfree.utils.{JsonUtils, StringUtils}
+import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.beans.property.{BooleanProperty, StringProperty}
@@ -15,11 +16,13 @@ import scalafx.beans.value.ObservableValue
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.cell.CheckBoxTableCell
 import scalafx.scene.control._
-import scalafx.scene.layout.{HBox, Pane}
+import scalafx.scene.control.cell.CheckBoxTableCell
+import scalafx.scene.layout.{HBox, Pane, VBox}
+import scalafx.scene.paint.Color._
+import scalafx.scene.shape.Rectangle
 
-import sys.process._
+import scala.sys.process._
 import scala.util.Try
 
 
@@ -46,7 +49,14 @@ object UIComponents {
     new Alert(AlertType.Error, message, ButtonType.OK).showAndWait()
   }
 
-  def modTableView(modData: ObservableBuffer[ObservableMod]): TableView[ObservableMod] = new TableView(modData){
+  def patchButton: Button = new Button {
+    text = "Patch"
+    minWidth = 50
+    onMouseClicked = e =>
+      EventHandlers.patch.map(s=> println(s))
+  }
+
+  def modTableView(modData: ObservableBuffer[ObservableMod]): TableView[ObservableMod] = new TableView(modData) {
     editable = true
     columnResizePolicy = TableView.ConstrainedResizePolicy
 
@@ -71,7 +81,13 @@ object UIComponents {
 }
 
 object EventHandlers {
-  def modChanged(oMod: ObservableMod): Unit ={
+
+  def patch: Try[String] = Try {
+    Process("./src/main/cs/TestSharp.exe bla").!!.trim
+  }
+
+
+  def modChanged(oMod: ObservableMod): Unit = {
     println("Changed" + oMod.name)
     val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
     Try {
@@ -85,7 +101,7 @@ object EventHandlers {
       }
       println(result)
       result
-    }.recover {case _: Throwable =>
+    }.recover { case _: Throwable =>
       println("Couldn't figure out patcher message.")
     }
     if (tryWrite.isFailure) {
@@ -128,15 +144,20 @@ object Modsenfree extends JFXApp {
   stage = new PrimaryStage {
     //    initStyle(StageStyle.Unified)
     title = Constants.title
+
     scene = new Scene(600, 600) {
 
 
       modData.foreach(oMod => {
-        oMod.enabled.onChange (EventHandlers.modChanged(oMod))
+        oMod.enabled.onChange(EventHandlers.modChanged(oMod))
       })
 
       private val modTableView: TableView[ObservableMod] = UIComponents.modTableView(modData)
-      root = modTableView
+
+      root = new VBox() {
+        children = Seq(patchButton, modTableView)
+      }
+      //      root = modTableView
 
     }
   }
