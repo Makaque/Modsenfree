@@ -23,7 +23,7 @@ import scalafx.scene.paint.Color._
 import scalafx.scene.shape.Rectangle
 
 import scala.sys.process._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 
 case class ObservableMod(id: String, name: StringProperty, enabled: BooleanProperty, file: File)
@@ -43,6 +43,13 @@ object ObservableMod {
   }
 }
 
+object Interop {
+  def isPatched(patcherExecutable: String, dllToPatch: String): Try[Boolean] = Try {
+//    throw new Exception
+    true
+  }
+}
+
 object UIComponents {
 
   def errorAlert(message: String): Unit = {
@@ -50,7 +57,14 @@ object UIComponents {
   }
 
   def patchButton: Button = new Button {
-    text = "Patch"
+    private val patchAttempt = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
+    patchAttempt match {
+      case Success(patched) => text = if(patched) "Unpatch" else "Patch"
+      case Failure(exception) =>
+        text = "Can't Patch"
+        disable = true
+    }
+//    text = "Patch"
     minWidth = 50
     onMouseClicked = e =>
       EventHandlers.patch.map(s => println(s))
@@ -94,10 +108,7 @@ object EventHandlers {
     println("Changed" + oMod.name)
     val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
     Try {
-      val result = Process("./src/main/cs/TestSharp.exe bla").!!.trim
-      println("result")
-      println(result.length)
-      println(result)
+      val result = Process(s"${Constants.patcherExecutable} bla").!!.trim
       PatcherMessage.withName(result) match {
         case PatcherMessage.RESPONDING => println("patcher responded")
         case _ => println("patcher didn't respond with responding")
@@ -192,19 +203,3 @@ object Modsenfree extends JFXApp {
     UIComponents.errorAlert(msg)
   }
 }
-
-
-//new ScrollPane {
-//  // fitToHeight = true
-//  //          padding = Insets(50, 80, 50, 80)
-//  content = new VBox {
-//  //            padding = Insets(50, 80, 50, 80)
-//  children =
-//  (1 to 30).map { i =>
-//  new Text {
-//  text = Random.nextLong().toString
-//  style = "-fx-font: italic bold 100pt sans-serif"
-//}
-//}
-//}
-//}
