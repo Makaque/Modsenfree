@@ -18,7 +18,7 @@ import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.control.cell.CheckBoxTableCell
-import scalafx.scene.layout.{HBox, Pane, VBox}
+import scalafx.scene.layout.{BorderPane, HBox, Pane, Priority, VBox}
 import scalafx.scene.paint.Color._
 import scalafx.scene.shape.Rectangle
 
@@ -53,12 +53,15 @@ object UIComponents {
     text = "Patch"
     minWidth = 50
     onMouseClicked = e =>
-      EventHandlers.patch.map(s=> println(s))
+      EventHandlers.patch.map(s => println(s))
   }
 
-  def modTableView(modData: ObservableBuffer[ObservableMod]): TableView[ObservableMod] = new TableView(modData) {
+  def modTableView(modData: ObservableBuffer[ObservableMod], followHeight: Option[ObservableValue[_, Number]] = None): TableView[ObservableMod] = new TableView(modData) {
     editable = true
     columnResizePolicy = TableView.ConstrainedResizePolicy
+    followHeight.foreach { h =>
+      prefHeight.bind(h)
+    }
 
 
     private val nameColumn = new TableColumn[ObservableMod, String](Mod.display.displayName) {
@@ -144,7 +147,6 @@ object Modsenfree extends JFXApp {
   stage = new PrimaryStage {
     //    initStyle(StageStyle.Unified)
     title = Constants.title
-
     scene = new Scene(600, 600) {
 
 
@@ -152,10 +154,23 @@ object Modsenfree extends JFXApp {
         oMod.enabled.onChange(EventHandlers.modChanged(oMod))
       })
 
-      private val modTableView: TableView[ObservableMod] = UIComponents.modTableView(modData)
-
-      root = new VBox() {
-        children = Seq(patchButton, modTableView)
+      root = new BorderPane {
+        center = new VBox {
+          vgrow = Priority.Always
+          private val vBoxHeightProp = height
+          children = {
+            Seq(
+              new ButtonBar {
+                buttons += UIComponents.patchButton
+              },
+              new ScrollPane {
+                fitToWidth = true
+                fitToHeight = true
+                content = UIComponents.modTableView(modData, Some(vBoxHeightProp))
+              }
+            )
+          }
+        }
       }
       //      root = modTableView
 
