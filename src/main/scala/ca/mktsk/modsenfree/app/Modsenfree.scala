@@ -57,17 +57,38 @@ object UIComponents {
   }
 
   def patchButton: Button = new Button {
-    private val patchAttempt = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
-    patchAttempt match {
-      case Success(patched) => text = if(patched) "Unpatch" else "Patch"
-      case Failure(exception) =>
-        text = "Can't Patch"
-        disable = true
+    private val patchText = "Patch"
+    private val unpatchText = "Unpatch"
+    private val failPatchCheckText = "Can't Patch"
+
+    private def working(): Unit = {
+      text = "Patching"
+      disable = true
     }
+
+    private def finished(): Unit = {
+      val patchAttempt = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
+      disable = false
+      patchAttempt match {
+        case Success(patched) => text = if(patched) "Unpatch" else "Patch"
+        case Failure(exception) =>
+          text = "Can't Patch"
+          disable = true
+      }
+    }
+
+      finished()
+
+
 //    text = "Patch"
     minWidth = 50
-    onMouseClicked = e =>
-      EventHandlers.patch.map(s => println(s))
+    onMouseClicked = e =>{
+      working()
+      EventHandlers.patch.map(s => {
+        println(s)
+        finished()
+      })
+    }
   }
 
   def modTableView(modData: ObservableBuffer[ObservableMod], followHeight: Option[ObservableValue[_, Number]] = None): TableView[ObservableMod] = new TableView(modData) {
