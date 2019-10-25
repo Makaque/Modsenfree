@@ -6,4 +6,7 @@ object Constants {
   val title = "Modsenfree Mod Loader"
   val patcherExecutable = "./src/main/cs/TestSharp.exe"
   val gameAssembly = "./Resources/Assembly-CSharp.dll"
+
+  val patchCommand = "patch"
+  val unpatchCommand = "unpatch"
 }

@@ -5,12 +5,11 @@ import java.io.File
 import java.lang.{Boolean => Jbool}
 
 import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
-import ca.mktsk.modsenfree.io.FileIO
+import ca.mktsk.modsenfree.io.{FileIO, Interop}
 import ca.mktsk.modsenfree.mod.{Constants, Mod}
 import ca.mktsk.modsenfree.utils.{JsonUtils, StringUtils}
-import scalafx.Includes._
-import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
+import scalafx.application.{JFXApp, Platform}
 import scalafx.beans.property.{BooleanProperty, StringProperty}
 import scalafx.beans.value.ObservableValue
 import scalafx.collections.ObservableBuffer
@@ -18,10 +17,9 @@ import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.control.cell.CheckBoxTableCell
-import scalafx.scene.layout.{BorderPane, HBox, Pane, Priority, VBox}
-import scalafx.scene.paint.Color._
-import scalafx.scene.shape.Rectangle
+import scalafx.scene.layout.{BorderPane, Priority, VBox}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process._
 import scala.util.{Failure, Success, Try}
 
@@ -43,13 +41,6 @@ object ObservableMod {
   }
 }
 
-object Interop {
-  def isPatched(patcherExecutable: String, dllToPatch: String): Try[Boolean] = Try {
-//    throw new Exception
-    true
-  }
-}
-
 object UIComponents {
 
   def errorAlert(message: String): Unit = {
@@ -60,34 +51,49 @@ object UIComponents {
     private val patchText = "Patch"
     private val unpatchText = "Unpatch"
     private val failPatchCheckText = "Can't Patch"
+    private val patchingText = "Patching"
+    private var isPatched = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
 
     private def working(): Unit = {
-      text = "Patching"
+      text = patchingText
       disable = true
     }
 
     private def finished(): Unit = {
-      val patchAttempt = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
+      isPatched = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
       disable = false
-      patchAttempt match {
-        case Success(patched) => text = if(patched) "Unpatch" else "Patch"
+      isPatched match {
+        case Success(patched) => text = if (patched) unpatchText else patchText
         case Failure(exception) =>
-          text = "Can't Patch"
+          text = failPatchCheckText
           disable = true
       }
     }
 
-      finished()
+    finished()
 
-
-//    text = "Patch"
     minWidth = 50
-    onMouseClicked = e =>{
+    onMouseClicked = e => {
       working()
-      EventHandlers.patch.map(s => {
-        println(s)
-        finished()
-      })
+      Future {
+        {
+          for {
+            isP <- isPatched
+            response <- if (isP) Interop.unpatch else Interop.patch
+          } yield (isP, PatcherMessage.withName(response))
+          }
+          .map { case (isP, patcherMessage) =>
+              println(patcherMessage)
+              patcherMessage match {
+                case PatcherMessage.PATCH_SUCCESS => Platform.runLater(EventHandlers.genericSuccess())
+                case _ => Platform.runLater(EventHandlers.genericFailure())
+              }
+          }
+      }(ExecutionContext.global).onComplete { _ =>
+        Platform.runLater {
+          finished()
+        }
+      }(ExecutionContext.global)
     }
   }
 
@@ -120,10 +126,13 @@ object UIComponents {
 
 object EventHandlers {
 
-  def patch: Try[String] = Try {
-    Process("./src/main/cs/TestSharp.exe bla").!!.trim
+  def genericSuccess(): Unit = {
+    UIComponents.errorAlert("Success!")
   }
 
+  def genericFailure(): Unit = {
+    UIComponents.errorAlert("Failed!")
+  }
 
   def modChanged(oMod: ObservableMod): Unit = {
     println("Changed" + oMod.name)
