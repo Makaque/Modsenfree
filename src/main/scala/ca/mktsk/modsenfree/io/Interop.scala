@@ -13,16 +13,10 @@ object Interop {
 
   def patcher(command: String): Try[String] = Try {
     Thread.sleep(3000)
-    Process(Seq(Constants.patcherExecutable, command)).!!.trim
+    Process(s"${Constants.patcherExecutable} $command ${Constants.gameAssembly}").!!.trim
   }
 
-  def patch: Try[String] = Try {
-    Thread.sleep(3000)
-    Process(s"${Constants.patcherExecutable} ${Constants.patchCommand}").!!.trim
-  }
+  def patch: Try[String] = patcher(Constants.patchCommand)
 
-  def unpatch: Try[String] = Try {
-    Thread.sleep(3000)
-    Process("./src/main/cs/TestSharp.exe bla").!!.trim
-  }
+  def unpatch: Try[String] = patcher(Constants.unpatchCommand)
 }

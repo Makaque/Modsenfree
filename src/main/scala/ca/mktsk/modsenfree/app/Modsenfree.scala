@@ -74,26 +74,35 @@ object UIComponents {
 
     minWidth = 50
     onMouseClicked = e => {
-      working()
-      Future {
-        {
-          for {
-            isP <- isPatched
-            response <- if (isP) Interop.unpatch else Interop.patch
-          } yield (isP, PatcherMessage.withName(response))
-          }
-          .map { case (isP, patcherMessage) =>
-              println(patcherMessage)
-              patcherMessage match {
-                case PatcherMessage.PATCH_SUCCESS => Platform.runLater(EventHandlers.genericSuccess())
-                case _ => Platform.runLater(EventHandlers.genericFailure())
+      Future(Platform.runLater(working()))(ExecutionContext.global)
+        .flatMap { _ =>
+          Future.fromTry {
+            for {
+              isP <- isPatched
+              response <- if (isP) Interop.unpatch else Interop.patch
+              bla <- Try {
+                println(response)
               }
+            } yield (isP, PatcherMessage.withName(response))
           }
-      }(ExecutionContext.global).onComplete { _ =>
-        Platform.runLater {
-          finished()
+        }(ExecutionContext.global).map { case (isP, patcherMessage) =>
+        println("mapping after patch")
+        println(patcherMessage)
+        patcherMessage match {
+          case PatcherMessage.PATCH_SUCCESS => Platform.runLater(EventHandlers.genericSuccess())
+          case _ => Platform.runLater(EventHandlers.genericFailure())
         }
       }(ExecutionContext.global)
+        .recover { case _: Throwable =>
+          println("recovering")
+          Platform.runLater(errorAlert("Failed somehow"))
+        }(ExecutionContext.global)
+        .onComplete { _ =>
+          println("onComplete")
+          Platform.runLater {
+            finished()
+          }
+        }(ExecutionContext.global)
     }
   }
 
