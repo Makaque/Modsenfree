@@ -89,7 +89,16 @@ object UIComponents {
         println("mapping after patch")
         println(patcherMessage)
         patcherMessage match {
-          case PatcherMessage.PATCH_SUCCESS => Platform.runLater(EventHandlers.genericSuccess())
+          case PatcherMessage.PATCH_SUCCESS => Platform.runLater(UIComponents.errorAlert("patcher PATCH_SUCCESS,"))
+          case PatcherMessage.UNPATCH_SUCCESS => Platform.runLater(UIComponents.errorAlert("patcher UNPATCH_SUCCESS,"))
+          case PatcherMessage.IS_PATCHED_TRUE => Platform.runLater(UIComponents.errorAlert("patcher IS_PATCHED_TRUE,"))
+          case PatcherMessage.IS_PATCHED_FALSE => Platform.runLater(UIComponents.errorAlert("patcher IS_PATCHED_FALSE,"))
+          case PatcherMessage.ERROR => Platform.runLater(UIComponents.errorAlert("patcher ERROR,"))
+          case PatcherMessage.MISSING_ASSEMBLY_ERROR => Platform.runLater(UIComponents.errorAlert("patcher MISSING_ASSEMBLY_ERROR,"))
+          case PatcherMessage.REPEAT_OPERATION_ERROR => Platform.runLater(UIComponents.errorAlert("patcher REPEAT_OPERATION_ERROR,"))
+          case PatcherMessage.INVALID_COMMAND_ERROR => Platform.runLater(UIComponents.errorAlert("patcher INVALID_COMMAND_ERROR,"))
+          case PatcherMessage.TOO_FEW_ARGUMENTS_ERROR => Platform.runLater(UIComponents.errorAlert("patcher TOO_FEW_ARGUMENTS_ERROR,"))
+          case PatcherMessage.UNIMPLEMENTED_ERROR => Platform.runLater(UIComponents.errorAlert("patcher UNIMPLEMENTED_ERROR"))
           case _ => Platform.runLater(EventHandlers.genericFailure())
         }
       }(ExecutionContext.global)
@@ -135,7 +144,7 @@ object UIComponents {
 
 object EventHandlers {
 
-  def genericSuccess(): Unit = {
+  def genericSuccess(message: Option[String] = None): Unit = {
     UIComponents.errorAlert("Success!")
   }
 
@@ -149,7 +158,16 @@ object EventHandlers {
     Try {
       val result = Process(s"${Constants.patcherExecutable} bla").!!.trim
       PatcherMessage.withName(result) match {
-        case PatcherMessage.RESPONDING => println("patcher responded")
+        case PatcherMessage.PATCH_SUCCESS => println("patcher PATCH_SUCCESS,")
+        case PatcherMessage.UNPATCH_SUCCESS => println("patcher UNPATCH_SUCCESS,")
+        case PatcherMessage.IS_PATCHED_TRUE => println("patcher IS_PATCHED_TRUE,")
+        case PatcherMessage.IS_PATCHED_FALSE => println("patcher IS_PATCHED_FALSE,")
+        case PatcherMessage.ERROR => println("patcher ERROR,")
+        case PatcherMessage.MISSING_ASSEMBLY_ERROR => println("patcher MISSING_ASSEMBLY_ERROR,")
+        case PatcherMessage.REPEAT_OPERATION_ERROR => println("patcher REPEAT_OPERATION_ERROR,")
+        case PatcherMessage.INVALID_COMMAND_ERROR => println("patcher INVALID_COMMAND_ERROR,")
+        case PatcherMessage.TOO_FEW_ARGUMENTS_ERROR => println("patcher TOO_FEW_ARGUMENTS_ERROR,")
+        case PatcherMessage.UNIMPLEMENTED_ERROR => println("patcher UNIMPLEMENTED_ERROR")
         case _ => println("patcher didn't respond with responding")
       }
       println(result)
