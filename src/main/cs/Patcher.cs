@@ -4,6 +4,8 @@ using System.IO;
 using Mono.Cecil;
 using Mono.Cecil.Inject;
 
+public class TooFewArgumentsException : Exception {}
+
 public enum Response
 {
     PATCH_SUCCESS,
@@ -23,69 +25,103 @@ public enum Command
     PATCH, UNPATCH, IS_PATCHED
 }
 
+public class PatchMethodLocation
+{
+    public readonly string assemblyFilename;
+    public readonly string className;
+    public readonly string methodName;
+
+    public PatchMethodLocation(string assemblyFilename, string className, string methodName)
+    {
+        this.assemblyFilename = assemblyFilename;
+        this.className = className;
+        this.methodName = methodName;
+    }
+
+    public MethodDefinition methodDefinition()
+    {
+        AssemblyDefinition assemblyDefn = AssemblyDefinition.LoadAssembly(assemblyFilename);
+        TypeDefinition classDefn = patchAssembly.MainModule.GetType(className);
+        MethodDefinition methodDefn = gameClass.Methods.find(m => m.Name = methodName);
+    }
+}
+
 public class CmdArgs
 {
 
     public readonly Command command;
-    public readonly string assemblyFilename;
+    public readonly PatchMethodLocation gamePatchLocation;
+    public readonly PatchMethodLocation patchToInjectLocation;
 
-    CmdArgs(Command command, string assemblyFilename)
+    CmdArgs(Command command, PatchMethodLocation gamePatchLocation, PatchMethodLocation patchToInjectLocation)
     {
         this.command = command;
-        this.assemblyFilename = assemblyFilename;
+        this.gamePatchLocation = gamePatchLocation;
+        this.patchToInjectLocation = patchToInjectLocation;
     }
 
     public static CmdArgs parse(string[] args)
     {
-
+        if (args.Length < 7) {
+            throw new TooFewArgumentsException();
+        }
         Command command = (Command)Enum.Parse(typeof(Command), args[0]);
-        string assemblyFilename = args[1];
-        return new CmdArgs(command, assemblyFilename);
+        string gameAssemblyFilename = args[1];
+        string gameClassInjectionSite = args[2];
+        string gameMethodInjectionSite = args[3];
+        string patchAssemblyFilename = args[4];
+        string patchClass = args[5];
+        string patchMethod = args[6];
+        PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyFilename, gameClassInjectionSite, gameMethodInjectionSite);
+        PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
+        return new CmdArgs(command, gamePatchLocation, patchToInjectLocation);
     }
 
 }
 
-public class Patcher {
-    public static Response patch(string assemblyFilename){
-        String thisAssemblyFilename = System.Reflection.Assembly.GetCallingAssembly().Location;
-        AssemblyDefinition gameAssembly = AssemblyDefinition.LoadAssembly(assemblyFilename);
-        AssemblyDefinition patcherAssembly = AssemblyDefinition.LoadAssembly(thisAssemblyFilename);
-        TypeDefinition gameClass = patcherAssembly.MainModule.GetType("MainCanvas");
-        TypeDefinition patcherClass = patcherAssembly.MainModule.GetType("Patcher");
-        MethodDefinition gameMethod = gameClass.Methods.find(m => m.Name = "Start");
-        MethodDefinition patcherMethod = patcherClass.Methods.find(m => m.Name = "patchToInject");
-
-        InjectionDefinition injector = InjectionDefinition(gameMethod, patcherMethod, InjectFlags.None);
-        injector.Inject();
-
+public class Patcher
+{
+    public static Response patch(CmdArgs cmdArgs)
+    {
+        InjectionDefinition(
+            cmdArgs.gamePatchLocation.methodDefinition,
+            cmdArgs.patchToInjectLocation.methodDefinition,
+            InjectFlags.None
+        ).Inject();
     }
 
-    public static Response unpatch(string assemblyFilename){
+    public static Response unpatch(CmdArgs cmdArgs)
+    {
         return Response.UNIMPLEMENTED_ERROR;
     }
 
-    public static Response isPatched(string assemblyFilename){
+    public static Response isPatched(CmdArgs cmdArgs)
+    {
         return Response.UNIMPLEMENTED_ERROR;
     }
 
-    public static Response invalidCommand(string assemblyFilename){
+    public static Response invalidCommand(CmdArgs cmdArgs)
+    {
         return Response.INVALID_COMMAND_ERROR;
     }
 
-    public static Func<string,Response> commandFunction(Command command){
-        switch (command){
+    public static Func<CmdArgs, Response> commandFunction(Command command)
+    {
+        switch (command)
+        {
             case Command.PATCH:
-            return patch;
+                return patch;
             case Command.UNPATCH:
-            return unpatch;
+                return unpatch;
             case Command.IS_PATCHED:
-            return isPatched;
+                return isPatched;
             default:
-            return invalidCommand;
+                return invalidCommand;
         }
     }
 
-    public static void patchToInject(){
+    public static void patchToInject()
+    {
         throw new Exception("patch successful");
     }
 }
@@ -93,8 +129,9 @@ public class Patcher {
 public class App
 {
 
-    public static Response exec(Command command, string assemblyFilename){
-        return Patcher.commandFunction(command)(assemblyFilename);
+    public static Response exec(Command command, CmdArgs cmdArgs)
+    {
+        return Patcher.commandFunction(command)(cmdArgs);
     }
 
     public static void Main(string[] args)
@@ -104,15 +141,13 @@ public class App
             CmdArgs cmdArgs = CmdArgs.parse(args);
             if (args.Length > 1)
             {
-                Response response = exec(cmdArgs.command, cmdArgs.assemblyFilename);
+                Response response = exec(cmdArgs.command, cmdArgs);
                 Console.Write(response);
             }
             else
             {
                 Console.Write(Response.TOO_FEW_ARGUMENTS_ERROR);
             }
-            //Console.WriteLine("Hello World");
-
         }
         catch (Exception)
         {
