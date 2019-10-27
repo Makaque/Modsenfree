@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using System.IO;
+using Mono.Cecil;
+using Mono.Cecil.Inject;
 
 public enum Response
 {
@@ -45,7 +47,17 @@ public class CmdArgs
 
 public class Patcher {
     public static Response patch(string assemblyFilename){
-        return Response.UNIMPLEMENTED_ERROR;
+        String thisAssemblyFilename = System.Reflection.Assembly.GetCallingAssembly().Location;
+        AssemblyDefinition gameAssembly = AssemblyDefinition.LoadAssembly(assemblyFilename);
+        AssemblyDefinition patcherAssembly = AssemblyDefinition.LoadAssembly(thisAssemblyFilename);
+        TypeDefinition gameClass = patcherAssembly.MainModule.GetType("MainCanvas");
+        TypeDefinition patcherClass = patcherAssembly.MainModule.GetType("Patcher");
+        MethodDefinition gameMethod = gameClass.Methods.find(m => m.Name = "Start");
+        MethodDefinition patcherMethod = patcherClass.Methods.find(m => m.Name = "patchToInject");
+
+        InjectionDefinition injector = InjectionDefinition(gameMethod, patcherMethod, InjectFlags.None);
+        injector.Inject();
+
     }
 
     public static Response unpatch(string assemblyFilename){
@@ -71,6 +83,10 @@ public class Patcher {
             default:
             return invalidCommand;
         }
+    }
+
+    public static void patchToInject(){
+        throw new Exception("patch successful");
     }
 }
 
