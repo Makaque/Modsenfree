@@ -1,10 +1,12 @@
 using UnityEngine;
 using System;
 using System.IO;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Inject;
 
-public class TooFewArgumentsException : Exception {}
+public class TooFewArgumentsException : Exception { }
+public class AssemblyReadException : Exception { }
 
 public enum Response
 {
@@ -14,6 +16,7 @@ public enum Response
     IS_PATCHED_FALSE,
     ERROR,
     MISSING_ASSEMBLY_ERROR,
+    ASSEMBLY_READ_ERROR,
     REPEAT_OPERATION_ERROR,
     INVALID_COMMAND_ERROR,
     TOO_FEW_ARGUMENTS_ERROR,
@@ -25,11 +28,23 @@ public enum Command
     PATCH, UNPATCH, IS_PATCHED
 }
 
+    public class PatchMethodDefinition{
+
+        public readonly AssemblyDefinition assemblyDefinition;
+        public readonly MethodDefinition methodDefinition;
+
+        public PatchMethodDefinition(AssemblyDefinition assemblyDefinition, MethodDefinition methodDefinition){
+            this.assemblyDefinition = assemblyDefinition;
+            this.methodDefinition = methodDefinition;
+        }
+    }
+
 public class PatchMethodLocation
 {
     public readonly string assemblyFilename;
     public readonly string className;
     public readonly string methodName;
+
 
     public PatchMethodLocation(string assemblyFilename, string className, string methodName)
     {
@@ -38,11 +53,19 @@ public class PatchMethodLocation
         this.methodName = methodName;
     }
 
-    public MethodDefinition methodDefinition()
+    public PatchMethodDefinition patchMethodDefinition()
     {
-        AssemblyDefinition assemblyDefn = AssemblyDefinition.LoadAssembly(assemblyFilename);
-        TypeDefinition classDefn = patchAssembly.MainModule.GetType(className);
-        MethodDefinition methodDefn = gameClass.Methods.find(m => m.Name = methodName);
+        // try
+        // {
+            AssemblyDefinition assemblyDefn = AssemblyLoader.LoadAssembly(assemblyFilename);
+            TypeDefinition classDefn = assemblyDefn.MainModule.GetType(className);
+            MethodDefinition methodDefn = classDefn.GetMethod(methodName);
+            return new PatchMethodDefinition(assemblyDefn, methodDefn);
+        // }
+        // catch (Exception)
+        // {
+            // throw new AssemblyReadException();
+        // }
     }
 }
 
@@ -62,7 +85,8 @@ public class CmdArgs
 
     public static CmdArgs parse(string[] args)
     {
-        if (args.Length < 7) {
+        if (args.Length < 7)
+        {
             throw new TooFewArgumentsException();
         }
         Command command = (Command)Enum.Parse(typeof(Command), args[0]);
@@ -83,11 +107,29 @@ public class Patcher
 {
     public static Response patch(CmdArgs cmdArgs)
     {
-        InjectionDefinition(
-            cmdArgs.gamePatchLocation.methodDefinition,
-            cmdArgs.patchToInjectLocation.methodDefinition,
-            InjectFlags.None
-        ).Inject();
+        // try
+        // {
+            // new InjectionDefinition(
+            //     cmdArgs.gamePatchLocation.methodDefinition(),
+            //     cmdArgs.patchToInjectLocation.methodDefinition(),
+            //     InjectFlags.None
+            // ).Inject();
+            PatchMethodDefinition gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition();
+            gamePatchDefinition.methodDefinition.InjectWith(
+                cmdArgs.patchToInjectLocation.patchMethodDefinition().methodDefinition,
+                flags: InjectFlags.None
+            );
+            gamePatchDefinition.assemblyDefinition.Write (cmdArgs.gamePatchLocation.assemblyFilename);
+            return Response.PATCH_SUCCESS;
+        // }
+        // catch (AssemblyReadException)
+        // {
+            // return Response.ASSEMBLY_READ_ERROR;
+        // }
+        // catch (Exception)
+        // {
+            // return Response.ERROR;
+        // }
     }
 
     public static Response unpatch(CmdArgs cmdArgs)
@@ -120,10 +162,6 @@ public class Patcher
         }
     }
 
-    public static void patchToInject()
-    {
-        throw new Exception("patch successful");
-    }
 }
 
 public class App
@@ -136,8 +174,8 @@ public class App
 
     public static void Main(string[] args)
     {
-        try
-        {
+        // try
+        // {
             CmdArgs cmdArgs = CmdArgs.parse(args);
             if (args.Length > 1)
             {
@@ -148,10 +186,10 @@ public class App
             {
                 Console.Write(Response.TOO_FEW_ARGUMENTS_ERROR);
             }
-        }
-        catch (Exception)
-        {
-            Console.Write(Response.ERROR);
-        }
+        // }
+        // catch (Exception)
+        // {
+            // Console.Write(Response.ERROR);
+        // }
     }
 }

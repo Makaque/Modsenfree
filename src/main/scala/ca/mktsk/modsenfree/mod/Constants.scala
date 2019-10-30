@@ -5,8 +5,16 @@ object Constants {
   val modDefinitionFilename = "mod.json"
   val title = "Modsenfree Mod Loader"
   val patcherExecutable = "./src/main/cs/Patcher.exe"
-  val gameAssembly = "./Resources/Assembly-CSharp.dll"
 
   val patchCommand = "PATCH"
   val unpatchCommand = "UNPATCH"
+  val isPatchedCommand = "IS_PATCHED"
+
+  val gameAssembly = "./Assembly-CSharp.dll"
+  val gameClassToPatch = "MainCanvas"
+  val gameMethodToPatch = "Awake"
+
+  val patchAssembly = "./Hook.dll"
+  val patchClass = "Hook"
+  val patchMethod = "hookToInject"
 }

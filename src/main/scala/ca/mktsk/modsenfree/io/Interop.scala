@@ -8,12 +8,21 @@ import scala.util.Try
 object Interop {
   def isPatched(patcherExecutable: String, dllToPatch: String): Try[Boolean] = Try {
     //    throw new Exception
-    true
+    false
   }
 
   def patcher(command: String): Try[String] = Try {
     Thread.sleep(3000)
-    Process(s"${Constants.patcherExecutable} $command ${Constants.gameAssembly}").!!.trim
+    Process(Seq(
+      Constants.patcherExecutable,
+      command,
+      Constants.gameAssembly,
+      Constants.gameClassToPatch,
+      Constants.gameMethodToPatch,
+      Constants.patchAssembly,
+      Constants.patchClass,
+      Constants.patchMethod
+    )).!!.trim
   }
 
   def patch: Try[String] = patcher(Constants.patchCommand)
