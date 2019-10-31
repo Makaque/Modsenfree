@@ -1,4 +1,4 @@
-using UnityEngine;
+// using UnityEngine;
 using System;
 using System.IO;
 using System.Linq;
@@ -57,7 +57,9 @@ public class PatchMethodLocation
     {
         // try
         // {
-            AssemblyDefinition assemblyDefn = AssemblyLoader.LoadAssembly(assemblyFilename);
+            var resolver = new DefaultAssemblyResolver();
+            resolver.AddSearchDirectory("./resources/");
+            AssemblyDefinition assemblyDefn = AssemblyDefinition.ReadAssembly(assemblyFilename, new ReaderParameters { AssemblyResolver = resolver });
             TypeDefinition classDefn = assemblyDefn.MainModule.GetType(className);
             MethodDefinition methodDefn = classDefn.GetMethod(methodName);
             return new PatchMethodDefinition(assemblyDefn, methodDefn);
@@ -96,6 +98,13 @@ public class CmdArgs
         string patchAssemblyFilename = args[4];
         string patchClass = args[5];
         string patchMethod = args[6];
+        if (!File.Exists(gameAssemblyFilename)){
+            throw new Exception("game not exists");
+        }
+        if(!File.Exists(patchAssemblyFilename)){
+            throw new Exception("patch not found");
+        }
+        Console.WriteLine(File.Exists(patchAssemblyFilename) ? "patch exists." : "patch does not exist.");
         PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyFilename, gameClassInjectionSite, gameMethodInjectionSite);
         PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
         return new CmdArgs(command, gamePatchLocation, patchToInjectLocation);
@@ -115,11 +124,13 @@ public class Patcher
             //     InjectFlags.None
             // ).Inject();
             PatchMethodDefinition gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition();
+            PatchMethodDefinition patchPatchDefinition = cmdArgs.patchToInjectLocation.patchMethodDefinition();
+            // gamePatchDefinition.methodDefinition.Body.GetILProcessor().InsertBefore(gamePatchDefinition.methodDefinition.Body.Instructions[0], Instruction.Create(OpCodes.Call, gamePatchDefinition.methodDefinition.Module.Import(patchPatchDefinition.methodDefinitiond)));
             gamePatchDefinition.methodDefinition.InjectWith(
-                cmdArgs.patchToInjectLocation.patchMethodDefinition().methodDefinition,
+                patchPatchDefinition.methodDefinition,
                 flags: InjectFlags.None
             );
-            gamePatchDefinition.assemblyDefinition.Write (cmdArgs.gamePatchLocation.assemblyFilename);
+            gamePatchDefinition.assemblyDefinition.Write (Path.GetFileName(cmdArgs.gamePatchLocation.assemblyFilename));
             return Response.PATCH_SUCCESS;
         // }
         // catch (AssemblyReadException)

@@ -83,7 +83,13 @@ object UIComponents {
               bla <- Try {
                 println(response)
               }
-            } yield (isP, PatcherMessage.withName(response))
+              bal <- Try {
+                PatcherMessage.values.foreach(println)
+              }
+            } yield {
+              println(response.trim + " equals " + PatcherMessage.PATCH_SUCCESS.toString + ": " + (response.trim.equals(PatcherMessage.PATCH_SUCCESS.toString)))
+              (isP, PatcherMessage.withName(response.trim))
+            }
           }
         }(ExecutionContext.global).map { case (isP, patcherMessage) =>
         println("mapping after patch")

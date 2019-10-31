@@ -10,11 +10,11 @@ object Constants {
   val unpatchCommand = "UNPATCH"
   val isPatchedCommand = "IS_PATCHED"
 
-  val gameAssembly = "./Assembly-CSharp.dll"
+  val gameAssembly = "./resources/Assembly-CSharp.dll"
   val gameClassToPatch = "MainCanvas"
   val gameMethodToPatch = "Awake"
 
-  val patchAssembly = "./Hook.dll"
-  val patchClass = "Hook"
+  val patchAssembly = "./src/main/cs/Hook.dll"
+  val patchClass = "HookNamespace.Hook"
   val patchMethod = "hookToInject"
 }
