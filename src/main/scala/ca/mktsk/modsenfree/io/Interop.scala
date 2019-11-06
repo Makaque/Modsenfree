@@ -12,7 +12,6 @@ object Interop {
   }
 
   def patcher(command: String): Try[String] = Try {
-    Thread.sleep(3000)
     Process(Seq(
       Constants.patcherExecutable,
       command,
