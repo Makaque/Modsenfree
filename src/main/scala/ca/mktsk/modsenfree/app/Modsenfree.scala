@@ -54,10 +54,10 @@ object UIComponents {
   }
 
   def patchButton: Button = new Button {
-    private val patchText = "Patch"
-    private val unpatchText = "Unpatch"
-    private val failPatchCheckText = "Can't Patch"
-    private val patchingText = "Patching"
+    private val patchText = Constants.patchButtonPatchText
+    private val unpatchText = Constants.patchButtonUnpatchText
+    private val failPatchCheckText = Constants.patchButtonFailPatchCheckText
+    private val patchingText = Constants.patchButtonPatchingText
     private var isPatched = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
 
     private def working(): Unit = {

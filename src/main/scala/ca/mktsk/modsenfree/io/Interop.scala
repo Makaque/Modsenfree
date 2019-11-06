@@ -21,7 +21,8 @@ object Interop {
       Constants.gameMethodToPatch,
       Constants.patchAssembly,
       Constants.patchClass,
-      Constants.patchMethod
+      Constants.patchMethod,
+      Constants.patchDependencyResolver
     )).!!.trim
   }
 

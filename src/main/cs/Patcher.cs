@@ -45,21 +45,30 @@ public class PatchMethodLocation
     public readonly string className;
     public readonly string methodName;
 
+    public readonly string resolver;
+
 
     public PatchMethodLocation(string assemblyFilename, string className, string methodName)
     {
         this.assemblyFilename = assemblyFilename;
         this.className = className;
         this.methodName = methodName;
+        
     }
 
-    public PatchMethodDefinition patchMethodDefinition()
+    public PatchMethodDefinition patchMethodDefinition(string resolverDirectory = null)
     {
         // try
         // {
-            var resolver = new DefaultAssemblyResolver();
-            resolver.AddSearchDirectory("./resources/");
-            AssemblyDefinition assemblyDefn = AssemblyDefinition.ReadAssembly(assemblyFilename, new ReaderParameters { AssemblyResolver = resolver });
+            DefaultAssemblyResolver resolver = null;
+            AssemblyDefinition assemblyDefn = null;
+            if(resolverDirectory != null){
+                resolver = new DefaultAssemblyResolver();
+                resolver.AddSearchDirectory(resolverDirectory);
+                assemblyDefn = AssemblyDefinition.ReadAssembly(assemblyFilename, new ReaderParameters { AssemblyResolver = resolver });
+            } else {
+                assemblyDefn = AssemblyDefinition.ReadAssembly(assemblyFilename);
+            }
             TypeDefinition classDefn = assemblyDefn.MainModule.GetType(className);
             MethodDefinition methodDefn = classDefn.GetMethod(methodName);
             return new PatchMethodDefinition(assemblyDefn, methodDefn);
@@ -77,12 +86,14 @@ public class CmdArgs
     public readonly Command command;
     public readonly PatchMethodLocation gamePatchLocation;
     public readonly PatchMethodLocation patchToInjectLocation;
+    public readonly string resolver; 
 
-    CmdArgs(Command command, PatchMethodLocation gamePatchLocation, PatchMethodLocation patchToInjectLocation)
+    CmdArgs(Command command, PatchMethodLocation gamePatchLocation, PatchMethodLocation patchToInjectLocation, string resolver = null)
     {
         this.command = command;
         this.gamePatchLocation = gamePatchLocation;
         this.patchToInjectLocation = patchToInjectLocation;
+        this.resolver = resolver;
     }
 
     public static CmdArgs parse(string[] args)
@@ -98,6 +109,10 @@ public class CmdArgs
         string patchAssemblyFilename = args[4];
         string patchClass = args[5];
         string patchMethod = args[6];
+        string resolver = null;
+        if(args.Length > 7){
+            resolver = args[7];
+        }
         if (!File.Exists(gameAssemblyFilename)){
             throw new Exception("game not exists");
         }
@@ -107,7 +122,7 @@ public class CmdArgs
         // Console.WriteLine(File.Exists(patchAssemblyFilename) ? "patch exists." : "patch does not exist.");
         PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyFilename, gameClassInjectionSite, gameMethodInjectionSite);
         PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
-        return new CmdArgs(command, gamePatchLocation, patchToInjectLocation);
+        return new CmdArgs(command, gamePatchLocation, patchToInjectLocation, resolver);
     }
 
 }
@@ -123,8 +138,8 @@ public class Patcher
             //     cmdArgs.patchToInjectLocation.methodDefinition(),
             //     InjectFlags.None
             // ).Inject();
-            PatchMethodDefinition gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition();
-            PatchMethodDefinition patchPatchDefinition = cmdArgs.patchToInjectLocation.patchMethodDefinition();
+            PatchMethodDefinition gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition(cmdArgs.resolver);
+            PatchMethodDefinition patchPatchDefinition = cmdArgs.patchToInjectLocation.patchMethodDefinition(cmdArgs.resolver);
             // gamePatchDefinition.methodDefinition.Body.GetILProcessor().InsertBefore(gamePatchDefinition.methodDefinition.Body.Instructions[0], Instruction.Create(OpCodes.Call, gamePatchDefinition.methodDefinition.Module.Import(patchPatchDefinition.methodDefinitiond)));
             gamePatchDefinition.methodDefinition.InjectWith(
                 patchPatchDefinition.methodDefinition,

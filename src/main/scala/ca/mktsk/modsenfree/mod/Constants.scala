@@ -17,4 +17,11 @@ object Constants {
   val patchAssembly = "./src/main/cs/Hook.dll"
   val patchClass = "HookNamespace.Hook"
   val patchMethod = "hookToInject"
+  val patchDependencyResolver = "./resources/"
+
+  val patchButtonPatchText = "Patch"
+  val patchButtonUnpatchText = "Unpatch"
+  val patchButtonFailPatchCheckText = "Can't Patch"
+  val patchButtonPatchingText = "Patching"
+  val patchButtonUnpatchingText = "Unpatching"
 }
