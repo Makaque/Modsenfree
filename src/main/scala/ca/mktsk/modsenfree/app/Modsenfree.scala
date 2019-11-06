@@ -47,6 +47,12 @@ object UIComponents {
     new Alert(AlertType.Error, message, ButtonType.OK).showAndWait()
   }
 
+  def successDialog(message: String): Unit = infoDialog(message)
+
+  def infoDialog(message: String): Unit = {
+    new Alert(AlertType.Information, message, ButtonType.OK).showAndWait()
+  }
+
   def patchButton: Button = new Button {
     private val patchText = "Patch"
     private val unpatchText = "Unpatch"
@@ -81,13 +87,15 @@ object UIComponents {
               isP <- isPatched
               response <- if (isP) Interop.unpatch else Interop.patch
               bla <- Try {
-                println(response)
+//                println(response)
               }
               bal <- Try {
-                PatcherMessage.values.foreach(println)
+//                PatcherMessage.values.foreach(println)
               }
             } yield {
               println(response.trim + " equals " + PatcherMessage.PATCH_SUCCESS.toString + ": " + (response.trim.equals(PatcherMessage.PATCH_SUCCESS.toString)))
+              println(response.trim.length)
+              println(PatcherMessage.PATCH_SUCCESS.toString.length)
               (isP, PatcherMessage.withName(response.trim))
             }
           }
@@ -95,10 +103,10 @@ object UIComponents {
         println("mapping after patch")
         println(patcherMessage)
         patcherMessage match {
-          case PatcherMessage.PATCH_SUCCESS => Platform.runLater(UIComponents.errorAlert("patcher PATCH_SUCCESS,"))
-          case PatcherMessage.UNPATCH_SUCCESS => Platform.runLater(UIComponents.errorAlert("patcher UNPATCH_SUCCESS,"))
-          case PatcherMessage.IS_PATCHED_TRUE => Platform.runLater(UIComponents.errorAlert("patcher IS_PATCHED_TRUE,"))
-          case PatcherMessage.IS_PATCHED_FALSE => Platform.runLater(UIComponents.errorAlert("patcher IS_PATCHED_FALSE,"))
+          case PatcherMessage.PATCH_SUCCESS => Platform.runLater(UIComponents.successDialog("patcher PATCH_SUCCESS,"))
+          case PatcherMessage.UNPATCH_SUCCESS => Platform.runLater(UIComponents.successDialog("patcher UNPATCH_SUCCESS,"))
+          case PatcherMessage.IS_PATCHED_TRUE => Platform.runLater(UIComponents.infoDialog("patcher IS_PATCHED_TRUE,"))
+          case PatcherMessage.IS_PATCHED_FALSE => Platform.runLater(UIComponents.infoDialog("patcher IS_PATCHED_FALSE,"))
           case PatcherMessage.ERROR => Platform.runLater(UIComponents.errorAlert("patcher ERROR,"))
           case PatcherMessage.MISSING_ASSEMBLY_ERROR => Platform.runLater(UIComponents.errorAlert("patcher MISSING_ASSEMBLY_ERROR,"))
           case PatcherMessage.REPEAT_OPERATION_ERROR => Platform.runLater(UIComponents.errorAlert("patcher REPEAT_OPERATION_ERROR,"))

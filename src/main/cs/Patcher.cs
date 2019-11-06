@@ -104,7 +104,7 @@ public class CmdArgs
         if(!File.Exists(patchAssemblyFilename)){
             throw new Exception("patch not found");
         }
-        Console.WriteLine(File.Exists(patchAssemblyFilename) ? "patch exists." : "patch does not exist.");
+        // Console.WriteLine(File.Exists(patchAssemblyFilename) ? "patch exists." : "patch does not exist.");
         PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyFilename, gameClassInjectionSite, gameMethodInjectionSite);
         PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
         return new CmdArgs(command, gamePatchLocation, patchToInjectLocation);
