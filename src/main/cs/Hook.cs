@@ -1,5 +1,6 @@
 using System;
-// using UnityEngine;
+using System.Reflection;
+using Harmony;
 
 namespace HookNamespace
 {
@@ -7,8 +8,11 @@ namespace HookNamespace
     {
         public static void hookToInject()
         {
-            throw new Exception("patch successful");
-            // Write hook's code here
+            // Current directory is Oxenfree top-level, not Assembly-CSharp.dll location
+            var harmony = HarmonyInstance.Create("ca.mktsk.modsenfree.loader");
+			harmony.PatchAll(Assembly.GetExecutingAssembly());
+            System.IO.File.WriteAllText(@"./test.txt", "text");
+            
         }
     }
 }
