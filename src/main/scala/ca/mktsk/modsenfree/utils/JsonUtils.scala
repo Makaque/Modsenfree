@@ -35,7 +35,7 @@ object JsonUtils {
       System.out.println(json.obj.keySet)
       val id = json.obj.get(Mod.field.id).get.str
       val name = json.obj.get(Mod.field.displayName).get.str
-      val enabled = json.obj.get(Mod.field.enabled).get.bool
+      val enabled = json.obj.get(Mod.field.enabled).getOrElse(ujson.Bool(false)).bool
 //      val file = new File(json.obj.get("file").str)
       Mod(id, name, enabled, file)
     }
