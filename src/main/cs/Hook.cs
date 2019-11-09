@@ -3,18 +3,19 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 using Harmony;
+using System.Collections.Generic;
 
 namespace HookNamespace
 {
 
     public static class Field {
-        const string enabled = "enabled";
-        const string assembly = "assemblyName";
+        public const string enabled = "enabled";
+        public const string assembly = "assemblyName";
     }
 
     public class FileContents {
-        readonly string file;
-        readonly string contents;
+        readonly public string file;
+        readonly public string contents;
 
         public FileContents(string file, string contents){
             this.file = file;
@@ -24,14 +25,14 @@ namespace HookNamespace
 
     public static class Hook
     {
-        string modsDirectory = "./Mods";
-        string modSettingsFilename = "mod.json";
+        const string modsDirectory = "./Mods";
+        const string modSettingsFilename = "mod.json";
 
         
 
         public static Assembly getModAssembly(FileContents fileContents)
         {
-            string assemblyName = new DataHelper(fileContents.contents).GetValue<string>(Field.assemblyName, null);
+            string assemblyName = new DataHelper(fileContents.contents).GetValue<string>(Field.assembly, null);
             if(assemblyName != null){
                 return Assembly.LoadFile(assemblyName);
             }
@@ -40,19 +41,19 @@ namespace HookNamespace
 
         public static bool isModEnabled(string settingsJson){
             DataHelper dataHelper = new DataHelper(settingsJson);
-            dataHelper.GetValue<bool>(Field.enabled, false);
+            return dataHelper.GetValue<bool>(Field.enabled, false);
         }
 
         public static List<Assembly> getMods()
         {
             return Directory.GetDirectories(modsDirectory)
                 .SelectMany(dir => Directory.GetFiles(dir))
-                .Where(file => Path.GetFileName(file) = modSettingsFilename)
+                .Where(file => Path.GetFileName(file) == modSettingsFilename)
                 .Select(file => new FileContents(file, File.ReadAllText(file)))
                 .Where(fileContents => Hook.isModEnabled(fileContents.contents))
                 .Select(fileContents => Hook.getModAssembly(fileContents))
                 .Where(asm => asm != null)
-                .toList();
+                .ToList();
         }
 
         public static void hookToInject()
