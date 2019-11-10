@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using Harmony;
 
-namespace HookNamespace
+namespace TestModNamespace
 {
     [HarmonyPatch(typeof(Subtitle))]
     [HarmonyPatch("Show")]
