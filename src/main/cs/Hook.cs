@@ -45,10 +45,17 @@ namespace HookNamespace
 
         public static Assembly getModAssembly(FileContents fileContents)
         {
-            string assemblyName = new DataHelper(fileContents.contents).GetValue<string>(Field.assembly, null);
+            log("before data helper");
+            DataHelper helper = new DataHelper(fileContents.contents);
+            log("got data helper");
+            string assemblyName = helper.GetValue<string>(Field.assembly, "");
+            log("got assemblyName: " + assemblyName);
             if(assemblyName != null){
                 string relativeFile = Path.GetDirectoryName(fileContents.file) + Path.DirectorySeparatorChar + assemblyName;
+            log("got dirname");
                 string absoluteFile = Path.GetFullPath(relativeFile);
+            log("got full path");
+                log("absolue file");
                 log(absoluteFile);
                 return Assembly.LoadFile(absoluteFile);
             }
@@ -102,11 +109,16 @@ namespace HookNamespace
         }
 
         public static List<Assembly> getAssemblies(List<FileContents> fileContents){
+            log("in getassemblies");
             List<Assembly> assemblies = new List<Assembly>();
             foreach (var fc in fileContents)
             {
+            log("for fc");
                 Assembly asm = Hook.getModAssembly(fc);
-                if(asm != null){
+            log("got mod assembly");
+            // Super important. Code implodes if you try to compare asm to null directly.
+                if(!((object) asm).Equals(null)){
+                    log("asm not null");
                     assemblies.Add(asm);
                 }
             }
@@ -118,11 +130,13 @@ namespace HookNamespace
         {
             // string[] dirs = Directory.GetDirectories(modsDirectory);
             // return 
+            log("in getmods");
             string[] dirs = Directory.GetDirectories(modsDirectory);
             List<string> files = Hook.getDirFiles(dirs);
             List<string> settingsFiles = Hook.filterSettingsFiles(files);
             List<FileContents> fileContents = Hook.getFileContents(settingsFiles);
             List<FileContents> enabled = Hook.filterEnabled(fileContents);
+            log("about to get assemblies");
             List<Assembly> assemblies = Hook.getAssemblies(enabled);
             return assemblies;
             // Func<string,string> bla = (a) => "hi";
@@ -140,12 +154,14 @@ namespace HookNamespace
             try{
             // Current directory is Oxenfree top-level, not Assembly-CSharp.dll location
             HarmonyInstance harmony = HarmonyInstance.Create("ca.mktsk.modsenfree.loader");
+            log("call getmods");
             // Hook.getMods();
-            Assembly asm = Assembly.LoadFrom(@"C:\Program Files (x86)\Steam\steamapps\common\Oxenfree\Mods\testmod\TestMod.dll");
-            // foreach (var asm in Hook.getMods())
-            // {
-            //     harmony.PatchAll(asm);
-            // }
+            // Assembly asm = Assembly.LoadFrom(@"C:\Program Files (x86)\Steam\steamapps\common\Oxenfree\Mods\testmod\TestMod.dll");
+            foreach (var asm in Hook.getMods())
+            {
+                harmony.PatchAll(asm);
+            }
+            log("Success");
 
             } catch (Exception e){
                 log(e.StackTrace);
