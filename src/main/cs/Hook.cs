@@ -13,6 +13,7 @@ namespace HookNamespace
     {
         public const string enabled = "enabled";
         public const string assembly = "assemblyName";
+        public const string hookMethod = "hookMethod";
     }
 
     public class FileContents
@@ -62,6 +63,11 @@ namespace HookNamespace
             return null;
         }
 
+        public static string getModIdentifier(String settingsJson)
+        {
+            
+        }
+
         public static bool isModEnabled(string settingsJson)
         {
             DataHelper dataHelper = new DataHelper(settingsJson);
@@ -108,9 +114,9 @@ namespace HookNamespace
             return fileContents;
         }
 
-        public static List<Assembly> getAssemblies(List<FileContents> fileContents){
+        public static List<Tuple<FileContents,Assembly>> getAssemblies(List<FileContents> fileContents){
             log("in getassemblies");
-            List<Assembly> assemblies = new List<Assembly>();
+            List<Tuple<FileContents,Assembly>> assemblies = new List<Tuple<FileContents,Assembly>>();
             foreach (var fc in fileContents)
             {
             log("for fc");
@@ -119,13 +125,13 @@ namespace HookNamespace
             // Super important. Code implodes if you try to compare asm to null directly.
                 if(!((object) asm).Equals(null)){
                     log("asm not null");
-                    assemblies.Add(asm);
+                    assemblies.Add(new Tuple<FileContents, Assembly>(fc, asm));
                 }
             }
             return assemblies;
         }
 
-        public static List<Assembly> getMods()
+        public static List<Tuple<FileContents,Assembly>> getMods()
         // public static void getMods()
         {
             // string[] dirs = Directory.GetDirectories(modsDirectory);
@@ -137,7 +143,7 @@ namespace HookNamespace
             List<FileContents> fileContents = Hook.getFileContents(settingsFiles);
             List<FileContents> enabled = Hook.filterEnabled(fileContents);
             log("about to get assemblies");
-            List<Assembly> assemblies = Hook.getAssemblies(enabled);
+            List<Tuple<FileContents,Assembly>> assemblies = Hook.getAssemblies(enabled);
             return assemblies;
             // Func<string,string> bla = (a) => "hi";
                 // .SelectMany(Directory.GetFiles);
@@ -157,8 +163,11 @@ namespace HookNamespace
             log("call getmods");
             // Hook.getMods();
             // Assembly asm = Assembly.LoadFrom(@"C:\Program Files (x86)\Steam\steamapps\common\Oxenfree\Mods\testmod\TestMod.dll");
-            foreach (var asm in Hook.getMods())
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            foreach (var mod in Hook.getMods())
             {
+                var fileContents = mod.First;
+                var asm = mod.Second;
                 harmony.PatchAll(asm);
             }
             log("Success");
