@@ -12,8 +12,19 @@ namespace HookNamespace
     public static class Field
     {
         public const string enabled = "enabled";
+        public const string identifier = "id";
         public const string assembly = "assemblyName";
         public const string hookMethod = "hookMethod";
+    }
+
+    public class Pair<T,U> {
+        readonly public T left;
+        readonly public U right;
+
+        public Pair(T left, U right){
+            this.left = left;
+            this.right = right;
+        }
     }
 
     public class FileContents
@@ -65,7 +76,8 @@ namespace HookNamespace
 
         public static string getModIdentifier(String settingsJson)
         {
-            
+            DataHelper dataHelper = new DataHelper(settingsJson);
+            return dataHelper.GetValue<String>(Field.identifier, "");
         }
 
         public static bool isModEnabled(string settingsJson)
@@ -114,9 +126,9 @@ namespace HookNamespace
             return fileContents;
         }
 
-        public static List<Tuple<FileContents,Assembly>> getAssemblies(List<FileContents> fileContents){
+        public static List<Pair<FileContents,Assembly>> getAssemblies(List<FileContents> fileContents){
             log("in getassemblies");
-            List<Tuple<FileContents,Assembly>> assemblies = new List<Tuple<FileContents,Assembly>>();
+            List<Pair<FileContents,Assembly>> assemblies = new List<Pair<FileContents,Assembly>>();
             foreach (var fc in fileContents)
             {
             log("for fc");
@@ -125,13 +137,13 @@ namespace HookNamespace
             // Super important. Code implodes if you try to compare asm to null directly.
                 if(!((object) asm).Equals(null)){
                     log("asm not null");
-                    assemblies.Add(new Tuple<FileContents, Assembly>(fc, asm));
+                    assemblies.Add(new Pair<FileContents, Assembly>(fc, asm));
                 }
             }
             return assemblies;
         }
 
-        public static List<Tuple<FileContents,Assembly>> getMods()
+        public static List<Pair<FileContents,Assembly>> getMods()
         // public static void getMods()
         {
             // string[] dirs = Directory.GetDirectories(modsDirectory);
@@ -143,7 +155,7 @@ namespace HookNamespace
             List<FileContents> fileContents = Hook.getFileContents(settingsFiles);
             List<FileContents> enabled = Hook.filterEnabled(fileContents);
             log("about to get assemblies");
-            List<Tuple<FileContents,Assembly>> assemblies = Hook.getAssemblies(enabled);
+            List<Pair<FileContents,Assembly>> assemblies = Hook.getAssemblies(enabled);
             return assemblies;
             // Func<string,string> bla = (a) => "hi";
                 // .SelectMany(Directory.GetFiles);
@@ -159,16 +171,28 @@ namespace HookNamespace
         {
             try{
             // Current directory is Oxenfree top-level, not Assembly-CSharp.dll location
-            HarmonyInstance harmony = HarmonyInstance.Create("ca.mktsk.modsenfree.loader");
+            // HarmonyInstance harmony = HarmonyInstance.Create("ca.mktsk.modsenfree.loader");
             log("call getmods");
             // Hook.getMods();
             // Assembly asm = Assembly.LoadFrom(@"C:\Program Files (x86)\Steam\steamapps\common\Oxenfree\Mods\testmod\TestMod.dll");
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            // harmony.PatchAll(Assembly.GetExecutingAssembly());
             foreach (var mod in Hook.getMods())
             {
-                var fileContents = mod.First;
-                var asm = mod.Second;
-                harmony.PatchAll(asm);
+                log("mod");
+                try{
+                    FileContents fileContents = mod.left;
+                    Assembly asm = mod.right;
+                    log("Contents = "+ fileContents.contents);
+                    String modId = getModIdentifier(fileContents.contents);
+                    log("ModId = "+ modId);
+                    if (!modId.Equals("")){
+                        HarmonyInstance harmonyInstance = HarmonyInstance.Create(modId);
+                        harmonyInstance.PatchAll(asm);
+                    }
+
+                } catch (Exception e ){
+                    log(e.StackTrace);
+                }
             }
             log("Success");
 
