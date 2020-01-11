@@ -152,23 +152,23 @@ namespace HookNamespace
         public static void hookToInject()
         {
             try{
-            // Current directory is Oxenfree top-level, not Assembly-CSharp.dll location
-            // HarmonyInstance harmony = HarmonyInstance.Create("ca.mktsk.modsenfree.loader");
-            foreach (var mod in Hook.getMods())
-            {
-                try{
-                    FileContents fileContents = mod.left;
-                    Assembly asm = mod.right;
-                    String modId = getModIdentifier(fileContents.contents);
-                    if (!modId.Equals("")){
-                        HarmonyInstance harmonyInstance = HarmonyInstance.Create(modId);
-                        harmonyInstance.PatchAll(asm);
-                    }
+                // Current directory is Oxenfree top-level, not Assembly-CSharp.dll location
+                // HarmonyInstance harmony = HarmonyInstance.Create("ca.mktsk.modsenfree.loader");
+                foreach (var mod in Hook.getMods())
+                {
+                    try{
+                        FileContents fileContents = mod.left;
+                        Assembly asm = mod.right;
+                        String modId = getModIdentifier(fileContents.contents);
+                        if (!modId.Equals("")){
+                            HarmonyInstance harmonyInstance = HarmonyInstance.Create(modId);
+                            harmonyInstance.PatchAll(asm);
+                        }
 
-                } catch (Exception e ){
-                    log(e.StackTrace);
+                    } catch (Exception e ){
+                        log(e.StackTrace);
+                    }
                 }
-            }
 
             } catch (Exception e){
                 log(e.StackTrace);
