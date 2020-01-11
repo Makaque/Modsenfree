@@ -86,12 +86,6 @@ object UIComponents {
             for {
               isP <- isPatched
               response <- if (isP) Interop.unpatch else Interop.patch
-              bla <- Try {
-//                println(response)
-              }
-              bal <- Try {
-//                PatcherMessage.values.foreach(println)
-              }
             } yield {
               println(response.trim + " equals " + PatcherMessage.PATCH_SUCCESS.toString + ": " + (response.trim.equals(PatcherMessage.PATCH_SUCCESS.toString)))
               println(response.trim.length)
