@@ -10,6 +10,8 @@ version := "0.1"
 
 scalaVersion := "2.13.1"
 
+mainClass in (Compile, run) := Some("ca.mktsk.modsenfree.app.Main")
+
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xcheckinit", "-encoding", "utf8")
 
 // Add dependency on ScalaFX library

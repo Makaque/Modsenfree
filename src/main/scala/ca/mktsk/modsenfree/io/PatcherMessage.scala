@@ -1,5 +1,4 @@
-package ca.mktsk.modsenfree.app
-
+package ca.mktsk.modsenfree.io
 
 object PatcherMessage extends Enumeration {
   type Message = Value

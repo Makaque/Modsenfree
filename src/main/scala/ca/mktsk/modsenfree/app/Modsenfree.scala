@@ -5,7 +5,7 @@ import java.io.File
 import java.lang.{Boolean => Jbool}
 
 import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
-import ca.mktsk.modsenfree.io.{FileIO, Interop}
+import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
 import ca.mktsk.modsenfree.mod.{Constants, Mod}
 import ca.mktsk.modsenfree.utils.{JsonUtils, StringUtils}
 import scalafx.application.JFXApp.PrimaryStage
