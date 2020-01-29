@@ -1,9 +1,13 @@
 package ca.mktsk.modsenfree.app
 
-import javafx.concurrent.Task
+//import javafx.concurrent.Task
+import ca.mktsk.modsenfree.utils.Task
 import javafx.event.ActionEvent
 import javafx.fxml.FXML
 import javafx.scene.control.{Button, Label}
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class ModsenfreeGUI {
@@ -20,21 +24,22 @@ class ModsenfreeGUI {
     messagePanelLabel.setText("Ready")
   }
 
-  class PatchButtonTask(patchButton: Button) extends Task[Unit]{
-    override def call(): Unit = {
-
-    }
-
-  }
+//  class PatchButtonTask(patchButton: Button) extends Task[Unit]{
+//    override def call(): Unit = {
+//
+//    }
+//
+//  }
 
   def patchButtonClicked(e: ActionEvent): Unit = {
     println("Patched")
-    val bla = new Task[Void]() {
-      override def call(): Void = {
-
-        return null;
-      }
-    }
+    val t = Task{
+      Thread.sleep(1000)
+      println("running")
+      "Hello"
+    }.onSuccess((e,s) => println(s))
+    println("starting")
+    Future(t.call())
   }
 
 }
