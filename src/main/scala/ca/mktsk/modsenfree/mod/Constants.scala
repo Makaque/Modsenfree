@@ -24,4 +24,5 @@ object Constants {
   val patchButtonFailPatchCheckText = "Can't Patch"
   val patchButtonPatchingText = "Patching"
   val patchButtonUnpatchingText = "Unpatching"
+  val patchButtonBusyText = "Working"
 }

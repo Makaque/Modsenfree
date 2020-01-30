@@ -85,7 +85,7 @@ object UIComponents {
           Future.fromTry {
             for {
               isP <- isPatched
-              response <- if (isP) Interop.unpatch else Interop.patch
+              response <- if (isP) Interop.unpatch() else Interop.patch()
             } yield {
               println(response.trim + " equals " + PatcherMessage.PATCH_SUCCESS.toString + ": " + (response.trim.equals(PatcherMessage.PATCH_SUCCESS.toString)))
               println(response.trim.length)
