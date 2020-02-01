@@ -15,7 +15,7 @@ mainClass in (Compile, run) := Some("ca.mktsk.modsenfree.app.Main")
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xcheckinit", "-encoding", "utf8")
 
 // Add dependency on ScalaFX library
-libraryDependencies += "org.scalafx" %% "scalafx" % "12.0.2-R18"
+//libraryDependencies += "org.scalafx" %% "scalafx" % "12.0.2-R18"
 
 // https://mvnrepository.com/artifact/com.typesafe.play/play-json
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.7.4"

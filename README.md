@@ -1,4 +1,8 @@
 ##Build instructions
+Must have `sh` on the path to compile C# files from SBT. You can install git, MinGW-w64,
+or Windows subsystems for Linux to get a Linux shell prompt on Windows, then add `sh` to
+the path.
+
 Must have Mono compiler and runtime in `modsenfree/Libraries/Mono/bin`
 
 The following dependencies need to be in `modsenfree/resources`

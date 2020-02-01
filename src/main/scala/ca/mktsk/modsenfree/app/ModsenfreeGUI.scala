@@ -9,11 +9,13 @@ import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
 import ca.mktsk.modsenfree.mod.ObservableMod
 import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Task}
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.collections.{FXCollections, ObservableList}
 import javafx.event.ActionEvent
 import javafx.fxml.FXML
+import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.cell.CheckBoxTableCell
-import javafx.scene.control.{Button, Label, MenuItem, TableColumn, TableView}
-import scalafx.collections.ObservableBuffer
+import javafx.scene.control.{Alert, Button, ButtonType, Label, MenuItem, TableColumn, TableView}
+import scala.collection.JavaConverters._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -53,7 +55,7 @@ class ModsenfreeGUI {
     println("Changed" + oMod.name)
     val tryWrite = FileIO.writeMod(ObservableMod.asMod(oMod))
     if (tryWrite.isFailure) {
-      UIComponents.errorAlert("Couldn't save " + oMod.name)
+      errorAlert("Couldn't save " + oMod.name)
     }
   }
 
@@ -92,6 +94,10 @@ class ModsenfreeGUI {
     list.map(_._1).foldRight("") { case (file, acc) => acc + file.getCanonicalPath + System.lineSeparator() }
   }
 
+  def errorAlert(message: String): Unit = {
+    new Alert(AlertType.ERROR, message, ButtonType.OK).showAndWait()
+  }
+
   def reportFailedModLoads(
                             definitionFiles: List[(File, Throwable)],
                             readFiles: List[(File, Throwable)],
@@ -100,17 +106,17 @@ class ModsenfreeGUI {
     if (definitionFiles.nonEmpty) {
       val msg = "These directories in the mods directory do not have a " + Constants.modDefinitionFilename + " file:" + System.lineSeparator() +
         errorFilesMessage(definitionFiles)
-      UIComponents.errorAlert(msg)
+      errorAlert(msg)
     }
     if (readFiles.nonEmpty) {
       val msg = "Could not read " + Constants.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
         errorFilesMessage(readFiles)
-      UIComponents.errorAlert(msg)
+      errorAlert(msg)
     }
     if (parseFiles.nonEmpty) {
       val msg = "The " + Constants.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
         errorFilesMessage(parseFiles)
-      UIComponents.errorAlert(msg)
+      errorAlert(msg)
     }
   }
 
@@ -135,16 +141,17 @@ class ModsenfreeGUI {
 
       val observableMods = mods.map(mod => ObservableMod.fromMod(mod))
 
-      val modData: ObservableBuffer[ObservableMod] = ObservableBuffer(observableMods)
 
       reportFailedModLoads(failedModDefinitionFiles, failedModRead, failedModParse)
 
-      modData
+//      modData
+      observableMods
 
     }
-      .onSuccess((e, modData) => {
-        modData.foreach(oMod => {
-          oMod.enabled.onChange(modChanged(oMod))
+      .onSuccess((e, observableMods) => {
+      val modData: ObservableList[ObservableMod] = FXCollections.observableList(observableMods.asJava)
+        observableMods.foreach(oMod => {
+          oMod.enabled.addListener(_ => modChanged(oMod))
         })
         modEnabledColumn.setCellValueFactory(cell => cell.getValue.enabled)
         modEnabledColumn.setCellFactory(CheckBoxTableCell.forTableColumn(modEnabledColumn))
