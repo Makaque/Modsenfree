@@ -6,8 +6,8 @@ import java.lang.{Boolean => Jbool}
 
 import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
 import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
-import ca.mktsk.modsenfree.mod.{Constants, Mod}
-import ca.mktsk.modsenfree.utils.{JsonUtils, StringUtils}
+import ca.mktsk.modsenfree.mod.{Mod, ObservableMod}
+import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, StringUtils}
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.application.{JFXApp, Platform}
 import scalafx.beans.property.{BooleanProperty, StringProperty}
@@ -24,22 +24,7 @@ import scala.sys.process._
 import scala.util.{Failure, Success, Try}
 
 
-case class ObservableMod(id: String, name: StringProperty, enabled: BooleanProperty, file: File)
 
-
-object ObservableMod {
-  def asMod(observableMod: ObservableMod): Mod = {
-    Mod(observableMod.id, observableMod.name.value, observableMod.enabled.value, observableMod.file)
-  }
-
-  def fromMod(mod: Mod): ObservableMod = {
-    val id = mod.id
-    val name = StringProperty(mod.displayName)
-    val enabled = new BooleanProperty(mod.enabled.asInstanceOf[Jbool], StringUtils.titleWordCap(Mod.field.enabled), mod.enabled.asInstanceOf[Jbool])
-    val file = mod.file
-    ObservableMod(id, name, enabled, file)
-  }
-}
 
 object UIComponents {
 

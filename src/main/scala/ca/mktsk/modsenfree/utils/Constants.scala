@@ -1,4 +1,4 @@
-package ca.mktsk.modsenfree.mod
+package ca.mktsk.modsenfree.utils
 
 object Constants {
   val modSearchDirectory = "./mods"

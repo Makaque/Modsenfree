@@ -1,6 +1,6 @@
 package ca.mktsk.modsenfree.io
 
-import ca.mktsk.modsenfree.mod.Constants
+import ca.mktsk.modsenfree.utils.Constants
 
 import scala.sys.process.Process
 import scala.util.Try

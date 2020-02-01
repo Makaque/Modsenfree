@@ -3,6 +3,8 @@ package ca.mktsk.modsenfree.utils
 import javafx.concurrent.{WorkerStateEvent, Task => jTask}
 import javafx.event.EventHandler
 
+import scala.util.{Failure, Success, Try}
+
 object Task {
   def apply[T](callFunc: => T): Task[T] = new Task[T]{
     override def call(): T = callFunc
@@ -45,4 +47,13 @@ abstract class Task[T] extends jTask[T] {
     updMsg = messageCall
     this
   }
+
+//  override def run(): Try[T] = {
+//    super.run()
+//    if (getException == null){
+//      Success(getValue)
+//    } else {
+//      Failure(getException)
+//    }
+//  }
 }
