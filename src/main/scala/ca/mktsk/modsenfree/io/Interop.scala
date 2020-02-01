@@ -7,7 +7,7 @@ import scala.util.Try
 
 object Interop {
   def isPatched(patcherExecutable: String, dllToPatch: String): Try[Boolean] = Try {
-    Thread.sleep(1000)
+//    Thread.sleep(1000)
     //    throw new Exception
     false
   }

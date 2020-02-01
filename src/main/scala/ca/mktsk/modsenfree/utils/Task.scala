@@ -1,5 +1,6 @@
 package ca.mktsk.modsenfree.utils
 
+import javafx.application.Platform
 import javafx.concurrent.{WorkerStateEvent, Task => jTask}
 import javafx.event.EventHandler
 
@@ -40,7 +41,8 @@ abstract class Task[T] extends jTask[T] {
 
   override def updateMessage(message: String): Unit = {
     super.updateMessage(message)
-    updMsg(message)
+    //TODO: Throttle this
+    Platform.runLater(() => updMsg(message))
   }
 
   def onUpdateMessage(messageCall: String => Unit): Task[T] = {

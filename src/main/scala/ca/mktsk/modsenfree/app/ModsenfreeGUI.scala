@@ -17,6 +17,7 @@ import scalafx.collections.ObservableBuffer
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Failure
 
 
 class ModsenfreeGUI {
@@ -141,7 +142,7 @@ class ModsenfreeGUI {
       modData
 
     }
-      .onSuccess((e,modData) => {
+      .onSuccess((e, modData) => {
         modData.foreach(oMod => {
           oMod.enabled.onChange(modChanged(oMod))
         })
@@ -167,11 +168,16 @@ class ModsenfreeGUI {
         if (patched != isPatchedGuess) {
           throw new RuntimeException("Tried to patch/unpatch when already done")
         } else {
-          Thread.sleep(5000)
-          Interop.patchJob(patched)
+          val patchAttempt = Interop.patchJob(patched)
             .map(result => PatcherMessage.withName(result))
-            .map(patchMessage => updateMessage(patchMessage.toString))
-          isPatched.getOrElse(!patched)
+            .map(patchMessage => {
+              println("patch message " + patchMessage)
+              updateMessage(patchMessage.toString)
+            })
+          if (patchAttempt.isFailure){
+            throw patchAttempt.failed.get
+          }
+          isPatched.get
         }
       }
     }
@@ -188,6 +194,11 @@ class ModsenfreeGUI {
         patchButton.setText(patchButtonText(isPatchedGuess))
         messagePanelLabel.setText(t.getMessage)
         println("Couldn't handle patch")
+        t.printStackTrace()
+      })
+      .onUpdateMessage(msg => {
+        println("onUpdateMessage " + msg)
+        messagePanelLabel.setText(msg)
       })
 
     Future(patchJob.run())

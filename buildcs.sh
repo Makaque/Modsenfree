@@ -9,6 +9,9 @@ SRC="./src/main/cs"
 mkdir -p $OUTPUT
 ./Libraries/Mono/bin/mcs $SRC/Patcher.cs -out:$OUTPUT/Patcher.exe -r:$MONO35,$RESOURCES/UnityEngine.dll,$RESOURCES/Mono.Cecil.dll,$RESOURCES/Mono.Cecil.Inject.dll
 ./Libraries/Mono/bin/mcs -langversion:ISO-2 $SRC/Hook.cs -out:$OUTPUT/Hook.dll -t:library -r:$MONO35,$RESOURCES/0Harmony.dll,$RESOURCES/Assembly-CSharp.dll
+cp $RESOURCES/Mono.Cecil.dll $OUTPUT/
+cp $RESOURCES/Mono.Cecil.Inject.dll $OUTPUT/
+cp $RESOURCES/UnityEngine.dll $OUTPUT/
 
 TESTMODDIR="$OUTPUT/Mods/testmod"
 mkdir -p $TESTMODDIR
