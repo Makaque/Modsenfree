@@ -26,9 +26,11 @@ object Interop {
     )).!!.trim
   }
 
+  def responseMessage(response: String): PatcherMessage.Value = PatcherMessage.withName(response.trim)
+
   def patch(): Try[String] = patcher(Constants.patchCommand)
 
   def unpatch(): Try[String] = patcher(Constants.unpatchCommand)
 
-  def patchJob(patch: Boolean): Try[String] =  if (patch) patch() else unpatch()
+  def patchJob(isPatched: Boolean): Try[String] =  if (isPatched) unpatch() else patch()
 }
