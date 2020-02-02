@@ -1,6 +1,5 @@
 package ca.mktsk.modsenfree.app
 
-//import javafx.concurrent.Task
 
 import java.io.File
 
@@ -8,18 +7,16 @@ import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
 import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
 import ca.mktsk.modsenfree.mod.ObservableMod
 import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Task}
-import javafx.beans.property.SimpleBooleanProperty
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.event.ActionEvent
 import javafx.fxml.FXML
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.cell.CheckBoxTableCell
-import javafx.scene.control.{Alert, Button, ButtonType, Label, MenuItem, TableColumn, TableView}
-import scala.collection.JavaConverters._
+import javafx.scene.control._
 
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Failure
 
 
 class ModsenfreeGUI {
@@ -144,12 +141,12 @@ class ModsenfreeGUI {
 
       reportFailedModLoads(failedModDefinitionFiles, failedModRead, failedModParse)
 
-//      modData
+      //      modData
       observableMods
 
     }
       .onSuccess((e, observableMods) => {
-      val modData: ObservableList[ObservableMod] = FXCollections.observableList(observableMods.asJava)
+        val modData: ObservableList[ObservableMod] = FXCollections.observableList(observableMods.asJava)
         observableMods.foreach(oMod => {
           oMod.enabled.addListener(_ => modChanged(oMod))
         })
@@ -181,7 +178,7 @@ class ModsenfreeGUI {
               println("patch message " + patchMessage)
               updateMessage(patchMessage.toString)
             })
-          if (patchAttempt.isFailure){
+          if (patchAttempt.isFailure) {
             throw patchAttempt.failed.get
           }
           isPatched.get

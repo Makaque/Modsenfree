@@ -8,16 +8,6 @@ import ujson.Value
 import scala.util.Try
 
 object JsonUtils {
-  //  def readMods(): List[Mod] = {
-  //    val str = ""
-  //    val json = ujson.read(str)
-  //    json.arrOpt match {
-  //      case None => List.empty
-  //      case Some(arr) =>
-  //        arr.ma
-  //    }
-  //
-  //  }
 
   def modToJson(mod: Mod): Value = {
     ujson.Obj(
@@ -36,7 +26,6 @@ object JsonUtils {
       val id = json.obj.get(Mod.field.id).get.str
       val name = json.obj.get(Mod.field.displayName).get.str
       val enabled = json.obj.get(Mod.field.enabled).getOrElse(ujson.Bool(false)).bool
-//      val file = new File(json.obj.get("file").str)
       Mod(id, name, enabled, file)
     }
   }

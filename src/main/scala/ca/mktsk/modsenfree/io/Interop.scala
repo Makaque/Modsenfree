@@ -7,8 +7,6 @@ import scala.util.Try
 
 object Interop {
   def isPatched(patcherExecutable: String, dllToPatch: String): Try[Boolean] = Try {
-//    Thread.sleep(1000)
-    //    throw new Exception
     false
   }
 
@@ -32,5 +30,5 @@ object Interop {
 
   def unpatch(): Try[String] = patcher(Constants.unpatchCommand)
 
-  def patchJob(isPatched: Boolean): Try[String] =  if (isPatched) unpatch() else patch()
+  def patchJob(isPatched: Boolean): Try[String] = if (isPatched) unpatch() else patch()
 }

@@ -1,12 +1,10 @@
 package ca.mktsk.modsenfree.mod
 
 import java.io.File
-
-import ca.mktsk.modsenfree.utils.StringUtils
 import java.lang.{Boolean => Jbool}
 
+import ca.mktsk.modsenfree.utils.StringUtils
 import javafx.beans.property.{BooleanProperty, SimpleBooleanProperty, SimpleStringProperty, StringProperty}
-
 
 
 case class ObservableMod(id: String, name: StringProperty, enabled: BooleanProperty, file: File)

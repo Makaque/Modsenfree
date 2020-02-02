@@ -5,7 +5,7 @@ import javafx.concurrent.{WorkerStateEvent, Task => jTask}
 import javafx.event.EventHandler
 
 object Task {
-  def apply[T](callFunc: => T): Task[T] = new Task[T]{
+  def apply[T](callFunc: => T): Task[T] = new Task[T] {
     override def call(): T = callFunc
   }
 }
@@ -16,7 +16,7 @@ abstract class Task[T] extends jTask[T] {
   private var updMsg: String => Unit = s => {}
 
 
-//  override def call(): T = callFunc
+  //  override def call(): T = callFunc
 
   private def onAction(actionMethod: ActionMethod)(actionCall: ActionEventHandler): Task[T] = {
     actionMethod(actionCall)
@@ -29,8 +29,11 @@ abstract class Task[T] extends jTask[T] {
   }
 
   def onRunning(runningCall: ActionEventHandler): Task[T] = onAction(setOnRunning)(runningCall)
-  def onCancelled(cancelledCall: ActionEventHandler) : Task[T] = onAction(setOnCancelled)(cancelledCall)
+
+  def onCancelled(cancelledCall: ActionEventHandler): Task[T] = onAction(setOnCancelled)(cancelledCall)
+
   def onScheduled(scheduledCall: ActionEventHandler): Task[T] = onAction(setOnScheduled)(scheduledCall)
+
   def onFailed(failedCall: (WorkerStateEvent, => Throwable) => Unit): Task[T] = {
     setOnFailed(e => failedCall(e, getException))
     this
