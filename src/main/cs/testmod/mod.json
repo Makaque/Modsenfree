@@ -1,5 +1,6 @@
 {
   "id": "ca.mktsk.modsenfree.testmod",
   "enabled": true,
+  "displayName": "Test Mod",
   "assemblyName": "TestMod.dll"
 }

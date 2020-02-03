@@ -7,6 +7,7 @@ import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
 import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
 import ca.mktsk.modsenfree.mod.ObservableMod
 import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Task}
+import javafx.application.Platform
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.event.ActionEvent
 import javafx.fxml.FXML
@@ -139,7 +140,7 @@ class ModsenfreeGUI {
       val observableMods = mods.map(mod => ObservableMod.fromMod(mod))
 
 
-      reportFailedModLoads(failedModDefinitionFiles, failedModRead, failedModParse)
+      Platform.runLater(() => reportFailedModLoads(failedModDefinitionFiles, failedModRead, failedModParse))
 
       //      modData
       observableMods
