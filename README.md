@@ -1,4 +1,4 @@
-##Build instructions
+## Build instructions
 Must have `sh` on the path to compile C# files from SBT. You can install git, MinGW-w64,
 or Windows subsystems for Linux to get a Linux shell prompt on Windows, then add `sh` to
 the path.
