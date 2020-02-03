@@ -1,5 +1,4 @@
-package ca.mktsk.modsenfree.app
-
+package ca.mktsk.modsenfree.io
 
 object PatcherMessage extends Enumeration {
   type Message = Value
@@ -8,6 +7,8 @@ object PatcherMessage extends Enumeration {
   IS_PATCHED_TRUE,
   IS_PATCHED_FALSE,
   ERROR,
+  MISSING_GAME_ASSEMBLY_ERROR,
+  MISSING_PATCH_ASSEMBLY_ERROR,
   MISSING_ASSEMBLY_ERROR,
   REPEAT_OPERATION_ERROR,
   INVALID_COMMAND_ERROR,

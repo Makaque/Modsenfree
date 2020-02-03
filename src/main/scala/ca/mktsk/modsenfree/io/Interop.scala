@@ -1,13 +1,12 @@
 package ca.mktsk.modsenfree.io
 
-import ca.mktsk.modsenfree.mod.Constants
+import ca.mktsk.modsenfree.utils.Constants
 
 import scala.sys.process.Process
 import scala.util.Try
 
 object Interop {
   def isPatched(patcherExecutable: String, dllToPatch: String): Try[Boolean] = Try {
-    //    throw new Exception
     false
   }
 
@@ -25,7 +24,11 @@ object Interop {
     )).!!.trim
   }
 
-  def patch: Try[String] = patcher(Constants.patchCommand)
+  def responseMessage(response: String): PatcherMessage.Value = PatcherMessage.withName(response.trim)
 
-  def unpatch: Try[String] = patcher(Constants.unpatchCommand)
+  def patch(): Try[String] = patcher(Constants.patchCommand)
+
+  def unpatch(): Try[String] = patcher(Constants.unpatchCommand)
+
+  def patchJob(isPatched: Boolean): Try[String] = if (isPatched) unpatch() else patch()
 }
