@@ -3,10 +3,10 @@ package ca.mktsk.modsenfree.app
 
 import java.io.File
 
-import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException}
+import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException, SettingsLoadException}
 import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
 import ca.mktsk.modsenfree.mod.ObservableMod
-import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Task}
+import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Settings, Task}
 import javafx.application.Platform
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.event.ActionEvent
@@ -40,13 +40,28 @@ class ModsenfreeGUI {
   @FXML
   var modNameColumn = new TableColumn[ObservableMod, String]
 
+  var settings: Settings = Settings.get
 
   @FXML
   def initialize(): Unit = {
     //    patchButton.setText("Patch")
-    refreshMessagePanelLabel()
-    refreshPatchButton()
-    loadModTable()
+
+    FileIO.getFileContent(new File(Constants.settingsFileLocation))
+      .map(settingsContents => Settings.init(settingsContents))
+      .recover {
+        case t: Throwable => throw new SettingsLoadException
+      }
+      .map(_ => {
+        refreshMessagePanelLabel()
+        refreshPatchButton()
+        loadModTable()
+      })
+      .recover({
+        case settingsLoadError: SettingsLoadException =>
+          Platform.runLater(() => errorAlert(Constants.settingsLoadFailMessage))
+        case t: Throwable =>
+          Platform.runLater(() => errorAlert("Unexpected error. Failed to load application"))
+      })
   }
 
   def modChanged(oMod: ObservableMod): Unit = {
@@ -58,18 +73,18 @@ class ModsenfreeGUI {
   }
 
   private def guessPatchedStatus(button: Button): Boolean =
-    button.getText != Constants.patchButtonPatchText
+    button.getText != settings.patchButtonPatchText
 
   private def patchButtonBusyText(isPatched: Boolean): String =
-  //    if (isPatched) Constants.patchButtonUnpatchingText else Constants.patchButtonPatchingText
-    Constants.patchButtonBusyText
+  //    if (isPatched) settings.patchButtonUnpatchingText else settings.patchButtonPatchingText
+    settings.patchButtonBusyText
 
   private def patchButtonText(isPatched: Boolean): String =
-    if (isPatched) Constants.patchButtonUnpatchText else Constants.patchButtonPatchText
+    if (isPatched) settings.patchButtonUnpatchText else settings.patchButtonPatchText
 
   private def patchButtonJob(isPatched: Boolean) = Interop.patch()
 
-  private def isPatched = Interop.isPatched(Constants.patcherExecutable, Constants.gameAssembly)
+  private def isPatched = Interop.isPatched(settings.patcherExecutable, settings.gameAssembly)
 
   def refreshPatchButton(): Unit = {
     val refreshJob = Task {
@@ -77,9 +92,9 @@ class ModsenfreeGUI {
     }
       .onSuccess((e, p) => patchButton.setText(patchButtonText(p)))
       .onFailed((e, t) => {
-        patchButton.setText((Constants.patchButtonFailPatchCheckText))
+        patchButton.setText((settings.patchButtonFailPatchCheckText))
         patchButton.setDisable(true)
-        messagePanelLabel.setText(Constants.patchButtonFailPatchCheckText)
+        messagePanelLabel.setText(settings.patchButtonFailPatchCheckText)
       })
     Future(refreshJob.run())
   }
@@ -102,17 +117,17 @@ class ModsenfreeGUI {
                             parseFiles: List[(File, Throwable)]
                           ): Unit = {
     if (definitionFiles.nonEmpty) {
-      val msg = "These directories in the mods directory do not have a " + Constants.modDefinitionFilename + " file:" + System.lineSeparator() +
+      val msg = "These directories in the mods directory do not have a " + settings.modDefinitionFilename + " file:" + System.lineSeparator() +
         errorFilesMessage(definitionFiles)
       errorAlert(msg)
     }
     if (readFiles.nonEmpty) {
-      val msg = "Could not read " + Constants.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
+      val msg = "Could not read " + settings.modDefinitionFilename + " file from the following mods:" + System.lineSeparator() +
         errorFilesMessage(readFiles)
       errorAlert(msg)
     }
     if (parseFiles.nonEmpty) {
-      val msg = "The " + Constants.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
+      val msg = "The " + settings.modDefinitionFilename + " file for these mods could not be parsed:" + System.lineSeparator() +
         errorFilesMessage(parseFiles)
       errorAlert(msg)
     }
@@ -121,13 +136,13 @@ class ModsenfreeGUI {
   def loadModTable(): Unit = {
     val loadTableJob = Task {
 
-      val modDirectories = FileIO.getSubdirectories(new File(Constants.modSearchDirectory))
+      val modDirectories = FileIO.getSubdirectories(new File(settings.modSearchDirectory))
         .getOrElse {
           throw NotDirectoryException("Could not find mod directory")
         }
 
       val attemptModDefinitionFiles = modDirectories
-        .map(modDir => (modDir, FileIO.getModDefinitionFile(modDir, Constants.modDefinitionFilename)))
+        .map(modDir => (modDir, FileIO.getModDefinitionFile(modDir, settings.modDefinitionFilename)))
 
       val (failedModDefinitionFiles, modDefinitionFiles) = Exceptions.splitWithCause(attemptModDefinitionFiles)
 
