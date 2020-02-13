@@ -51,6 +51,7 @@ class ModsenfreeGUI {
 
     FileIO.getFileContent(new File(Constants.settingsFileLocation))
       .map(settingsContents => {
+        println(settingsContents)
         settings = Settings(settingsContents)
       })
       .recover {

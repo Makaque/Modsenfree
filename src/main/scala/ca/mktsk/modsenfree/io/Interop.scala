@@ -31,7 +31,6 @@ object Interop {
   def unpatch(settings: Settings)(): Try[String] = patcher(settings)(settings.unpatchCommand)
 
   def patchJob(settings: Settings)(isPatched: Boolean): Try[String] = {
-    println(settings.settingsContents)
     if (isPatched) unpatch(settings)() else patch(settings)()
   }
 }
