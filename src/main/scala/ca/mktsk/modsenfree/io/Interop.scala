@@ -10,25 +10,28 @@ object Interop {
     false
   }
 
-  def patcher(command: String): Try[String] = Try {
+  def patcher(settings: Settings)(command: String): Try[String] = Try {
     Process(Seq(
-      Settings.get.patcherExecutable,
+      settings.patcherExecutable,
       command,
-      Settings.get.gameAssembly,
-      Settings.get.gameClassToPatch,
-      Settings.get.gameMethodToPatch,
-      Settings.get.patchAssembly,
-      Settings.get.patchClass,
-      Settings.get.patchMethod,
-      Settings.get.patchDependencyResolver
+      settings.gameAssembly,
+      settings.gameClassToPatch,
+      settings.gameMethodToPatch,
+      settings.patchAssembly,
+      settings.patchClass,
+      settings.patchMethod,
+      settings.patchDependencyResolver
     )).!!.trim
   }
 
   def responseMessage(response: String): PatcherMessage.Value = PatcherMessage.withName(response.trim)
 
-  def patch(): Try[String] = patcher(Settings.get.patchCommand)
+  def patch(settings: Settings)(): Try[String] = patcher(settings)(settings.patchCommand)
 
-  def unpatch(): Try[String] = patcher(Settings.get.unpatchCommand)
+  def unpatch(settings: Settings)(): Try[String] = patcher(settings)(settings.unpatchCommand)
 
-  def patchJob(isPatched: Boolean): Try[String] = if (isPatched) unpatch() else patch()
+  def patchJob(settings: Settings)(isPatched: Boolean): Try[String] = {
+    println(settings.settingsContents)
+    if (isPatched) unpatch(settings)() else patch(settings)()
+  }
 }

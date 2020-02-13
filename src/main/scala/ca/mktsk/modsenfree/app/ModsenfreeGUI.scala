@@ -18,6 +18,7 @@ import javafx.scene.control._
 import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 
 class ModsenfreeGUI {
@@ -40,14 +41,20 @@ class ModsenfreeGUI {
   @FXML
   var modNameColumn = new TableColumn[ObservableMod, String]
 
-  var settings: Settings = Settings.get
+  var settings: Settings = _
+
+  def patchJob: Boolean => Try[String] = Interop.patchJob(settings)
 
   @FXML
   def initialize(): Unit = {
     //    patchButton.setText("Patch")
 
     FileIO.getFileContent(new File(Constants.settingsFileLocation))
-      .map(settingsContents => Settings.init(settingsContents))
+      .map(settingsContents => {
+//        println(settingsContents)
+//        Settings.init(settingsContents)
+        settings = Settings(settingsContents)
+      })
       .recover {
         case t: Throwable => throw new SettingsLoadException
       }
@@ -82,7 +89,7 @@ class ModsenfreeGUI {
   private def patchButtonText(isPatched: Boolean): String =
     if (isPatched) settings.patchButtonUnpatchText else settings.patchButtonPatchText
 
-  private def patchButtonJob(isPatched: Boolean) = Interop.patch()
+//  private def patchButtonJob(isPatched: Boolean) = Interop.patch()
 
   private def isPatched = Interop.isPatched(settings.patcherExecutable, settings.gameAssembly)
 
@@ -181,14 +188,14 @@ class ModsenfreeGUI {
     val isPatchedGuess = guessPatchedStatus(patchButton)
 
 
-    val patchJob = new Task[Boolean] {
+    val patchTask = new Task[Boolean] {
 
       override def call(): Boolean = {
         val patched = isPatched.get
         if (patched != isPatchedGuess) {
           throw new RuntimeException("Tried to patch/unpatch when already done")
         } else {
-          val patchAttempt = Interop.patchJob(patched)
+          val patchAttempt = patchJob(patched)
             .map(result => PatcherMessage.withName(result))
             .map(patchMessage => {
               println("patch message " + patchMessage)
@@ -221,13 +228,14 @@ class ModsenfreeGUI {
         messagePanelLabel.setText(msg)
       })
 
-    Future(patchJob.run())
+    Future(patchTask.run())
   }
 
   def refreshViewClicked(e: ActionEvent): Unit = {
-    refreshMessagePanelLabel()
-    refreshPatchButton()
-    loadModTable()
+//    refreshMessagePanelLabel()
+//    refreshPatchButton()
+//    loadModTable()
+    initialize()
     println("refreshed")
   }
 

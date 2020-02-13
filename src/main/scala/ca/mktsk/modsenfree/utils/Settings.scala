@@ -4,14 +4,16 @@ import java.io.{BufferedReader, StringReader}
 import java.util.Properties
 
 import scala.util.Properties
-object Settings{
-  var get: Settings = _
-  def init(settingsContents: String): Unit = {
-    get = new Settings(settingsContents)
-  }
+
+object Settings {
+  //  var get: Settings = _
+  //  def apply(settingsContents: String): Unit = {
+  //    get = new Settings(settingsContents)
+  //  }
+  def apply(settingsContents: String): Settings = new Settings(settingsContents)
 }
 
-class Settings(settingsContents: String) {
+class Settings(val settingsContents: String) {
   private val properties: Properties = {
     val props = new Properties()
     props.load(new StringReader(settingsContents))
