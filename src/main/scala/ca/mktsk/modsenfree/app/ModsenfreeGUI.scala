@@ -51,8 +51,6 @@ class ModsenfreeGUI {
 
     FileIO.getFileContent(new File(Constants.settingsFileLocation))
       .map(settingsContents => {
-//        println(settingsContents)
-//        Settings.init(settingsContents)
         settings = Settings(settingsContents)
       })
       .recover {
@@ -83,13 +81,10 @@ class ModsenfreeGUI {
     button.getText != settings.patchButtonPatchText
 
   private def patchButtonBusyText(isPatched: Boolean): String =
-  //    if (isPatched) settings.patchButtonUnpatchingText else settings.patchButtonPatchingText
     settings.patchButtonBusyText
 
   private def patchButtonText(isPatched: Boolean): String =
     if (isPatched) settings.patchButtonUnpatchText else settings.patchButtonPatchText
-
-//  private def patchButtonJob(isPatched: Boolean) = Interop.patch()
 
   private def isPatched = Interop.isPatched(settings.patcherExecutable, settings.gameAssembly)
 
@@ -161,12 +156,9 @@ class ModsenfreeGUI {
 
       val observableMods = mods.map(mod => ObservableMod.fromMod(mod))
 
-
       Platform.runLater(() => reportFailedModLoads(failedModDefinitionFiles, failedModRead, failedModParse))
 
-      //      modData
       observableMods
-
     }
       .onSuccess((e, observableMods) => {
         val modData: ObservableList[ObservableMod] = FXCollections.observableList(observableMods.asJava)
@@ -232,9 +224,6 @@ class ModsenfreeGUI {
   }
 
   def refreshViewClicked(e: ActionEvent): Unit = {
-//    refreshMessagePanelLabel()
-//    refreshPatchButton()
-//    loadModTable()
     initialize()
     println("refreshed")
   }
