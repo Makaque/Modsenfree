@@ -14,6 +14,8 @@ import javafx.fxml.FXML
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.cell.CheckBoxTableCell
 import javafx.scene.control._
+import javafx.scene.layout.BorderPane
+import javafx.stage.{DirectoryChooser, FileChooser}
 
 import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,10 +26,19 @@ import scala.util.Try
 class ModsenfreeGUI {
 
   @FXML
+  var rootPane = new BorderPane
+
+  @FXML
   var patchButton = new Button
 
   @FXML
   var messagePanelLabel = new Label
+
+  @FXML
+  var gameFolderMenuItem = new MenuItem
+
+  @FXML
+  var installModMenuItem = new MenuItem
 
   @FXML
   var refreshMenuItem = new MenuItem
@@ -227,6 +238,27 @@ class ModsenfreeGUI {
   def refreshViewClicked(e: ActionEvent): Unit = {
     initialize()
     println("refreshed")
+  }
+
+  def gameFolderMenuItemClicked(e: ActionEvent): Unit = {
+    val directoryChooser = new DirectoryChooser
+    directoryChooser.setInitialDirectory(new File(settings.gameInstallLocation))
+    Option[File](directoryChooser.showDialog(rootPane.getScene.getWindow))
+      .foreach(gameFolder => {
+        val newSettings = settings
+          .set("gameInstallLocation", gameFolder.getAbsolutePath)
+          .set("gameAssembly", gameFolder.getAbsolutePath + settings.gameAssemblyFromInstall)
+        Try {
+          Settings.save(Constants.settingsFileLocation)(newSettings)
+        }.recover {
+          case throwable: Throwable => errorAlert("Failed to save settings changes")
+        }.map(_ => initialize())
+        println(gameFolder)
+      })
+  }
+
+  def installModMenuItemClicked(e: ActionEvent): Unit = {
+    println("Install mod")
   }
 
 

@@ -1,6 +1,6 @@
 package ca.mktsk.modsenfree.utils
 
-import java.io.{BufferedReader, StringReader}
+import java.io.{BufferedReader, FileOutputStream, StringReader}
 import java.util.Properties
 
 import scala.util.Properties
@@ -10,14 +10,31 @@ object Settings {
   //  def apply(settingsContents: String): Unit = {
   //    get = new Settings(settingsContents)
   //  }
-  def apply(settingsContents: String): Settings = new Settings(settingsContents)
+  def apply(settingsContents: String): Settings = {
+    val properties: Properties = {
+      val props = new Properties()
+      props.load(new StringReader(settingsContents))
+      props
+    }
+    new Settings(settingsContents, properties)
+  }
+
+  def save(propertiesPath: String)(settings: Settings): Unit = {
+    settings.properties.store(new FileOutputStream(propertiesPath), null)
+  }
 }
 
-class Settings(val settingsContents: String) {
-  private val properties: Properties = {
-    val props = new Properties()
-    props.load(new StringReader(settingsContents))
-    props
+class Settings(val settingsContents: String, private val properties: Properties) {
+//  private val properties: Properties = {
+//    val props = new Properties()
+//    props.load(new StringReader(settingsContents))
+//    props
+//  }
+
+  def set(property: String, value: String): Settings = {
+    val updated = new Settings(settingsContents, properties)
+    updated.properties.setProperty(property, value)
+    updated
   }
 
   val modSearchDirectory: String = properties.getProperty("modSearchDirectory")
@@ -29,7 +46,9 @@ class Settings(val settingsContents: String) {
   val unpatchCommand: String = properties.getProperty("unpatchCommand")
   val isPatchedCommand: String = properties.getProperty("isPatchedCommand")
 
+  val gameInstallLocation: String = properties.getProperty("gameInstallLocation")
   val gameAssembly: String = properties.getProperty("gameAssembly")
+  val gameAssemblyFromInstall: String = properties.getProperty("gameAssemblyFromInstall")
   val gameClassToPatch: String = properties.getProperty("gameClassToPatch")
   val gameMethodToPatch: String = properties.getProperty("gameMethodToPatch")
 
