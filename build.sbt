@@ -1,4 +1,6 @@
 import scala.sys.process._
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 name := "modsenfree"
 
@@ -59,8 +61,18 @@ buildCS := {
   Process(Seq("sh", "./buildcs.sh")).!
 }
 
-// Compile C# for SBT run
-(run in Compile) := (run in Compile).dependsOn(buildCS).toTask("").value
+lazy val copyProps = taskKey[Unit]("Copy properties file to compiled build")
 
-// Compile C# for SBT compile
-(compile in Compile) := (compile in Compile).dependsOn(buildCS).value
+copyProps :=  {
+  Files.copy(
+    (baseDirectory.value / "modsenfree.properties").toPath,
+    (target.value / "modsenfree" / "modsenfree.properties").toPath,
+    REPLACE_EXISTING
+  )
+}
+
+// Compile C# and copy properties file for SBT run
+(run in Compile) := (run in Compile).dependsOn(buildCS, copyProps).toTask("").value
+
+// Compile C# and copy properties file for SBT compile
+(compile in Compile) := (compile in Compile).dependsOn(buildCS, copyProps).value
