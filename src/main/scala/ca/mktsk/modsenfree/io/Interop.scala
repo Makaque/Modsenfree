@@ -1,6 +1,6 @@
 package ca.mktsk.modsenfree.io
 
-import ca.mktsk.modsenfree.utils.Constants
+import ca.mktsk.modsenfree.utils.{Constants, Settings, StringUtils}
 
 import scala.sys.process.Process
 import scala.util.Try
@@ -10,25 +10,29 @@ object Interop {
     false
   }
 
-  def patcher(command: String): Try[String] = Try {
-    Process(Seq(
-      Constants.patcherExecutable,
+  def patcher(settings: Settings)(command: String): Try[String] = Try {
+    val cmd = Seq(
+      settings.patcherExecutable,
       command,
-      Constants.gameAssembly,
-      Constants.gameClassToPatch,
-      Constants.gameMethodToPatch,
-      Constants.patchAssembly,
-      Constants.patchClass,
-      Constants.patchMethod,
-      Constants.patchDependencyResolver
-    )).!!.trim
+      settings.gameAssembly,
+      settings.gameClassToPatch,
+      settings.gameMethodToPatch,
+      settings.patchAssembly,
+      settings.patchClass,
+      settings.patchMethod,
+      settings.patchDependencyResolver
+    ).map(StringUtils.quote)
+    println("cmd: " + cmd)
+    Process(cmd).!!.trim
   }
 
   def responseMessage(response: String): PatcherMessage.Value = PatcherMessage.withName(response.trim)
 
-  def patch(): Try[String] = patcher(Constants.patchCommand)
+  def patch(settings: Settings)(): Try[String] = patcher(settings)(settings.patchCommand)
 
-  def unpatch(): Try[String] = patcher(Constants.unpatchCommand)
+  def unpatch(settings: Settings)(): Try[String] = patcher(settings)(settings.unpatchCommand)
 
-  def patchJob(isPatched: Boolean): Try[String] = if (isPatched) unpatch() else patch()
+  def patchJob(settings: Settings)(isPatched: Boolean): Try[String] = {
+    if (isPatched) unpatch(settings)() else patch(settings)()
+  }
 }

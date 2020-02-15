@@ -1,6 +1,8 @@
 package ca.mktsk.modsenfree.app
 
 
+import ca.mktsk.modsenfree.io.FileIO
+import ca.mktsk.modsenfree.utils.Settings
 import javafx.application.Application
 import javafx.fxml.FXMLLoader
 import javafx.scene.{Parent, Scene}

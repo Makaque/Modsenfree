@@ -1,6 +1,10 @@
 package ca.mktsk.modsenfree.utils
 
 object Constants {
+
+  val settingsFileLocation = "./modsenfree.properties"
+  val settingsLoadFailMessage = "Failed to load settings file from modsenfree.properties"
+
   val modSearchDirectory = "./mods"
   val modDefinitionFilename = "mod.json"
   val title = "Modsenfree Mod Loader"
