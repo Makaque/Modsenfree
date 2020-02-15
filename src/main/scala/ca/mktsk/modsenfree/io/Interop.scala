@@ -1,6 +1,6 @@
 package ca.mktsk.modsenfree.io
 
-import ca.mktsk.modsenfree.utils.{Constants, Settings}
+import ca.mktsk.modsenfree.utils.{Constants, Settings, StringUtils}
 
 import scala.sys.process.Process
 import scala.util.Try
@@ -11,7 +11,7 @@ object Interop {
   }
 
   def patcher(settings: Settings)(command: String): Try[String] = Try {
-    Process(Seq(
+    val cmd = Seq(
       settings.patcherExecutable,
       command,
       settings.gameAssembly,
@@ -21,7 +21,9 @@ object Interop {
       settings.patchClass,
       settings.patchMethod,
       settings.patchDependencyResolver
-    )).!!.trim
+    ).map(StringUtils.quote)
+    println("cmd: " + cmd)
+    Process(cmd).!!.trim
   }
 
   def responseMessage(response: String): PatcherMessage.Value = PatcherMessage.withName(response.trim)

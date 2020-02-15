@@ -17,4 +17,9 @@ object StringUtils {
     path.replaceAllLiterally(File.separator, "/")
   }
 
+  def quote(str: String): String = {
+    val q = "\""
+    s"$q$str$q"
+  }
+
 }

@@ -247,7 +247,7 @@ class ModsenfreeGUI {
       .foreach(gameFolder => {
         val newSettings = settings
           .set("gameInstallLocation", StringUtils.toUnixSeparatedPath(gameFolder.getAbsolutePath))
-          .set("gameAssembly", StringUtils.toUnixSeparatedPath(gameFolder.getAbsolutePath + settings.gameAssemblyFromInstall))
+          .set("gameAssembly", StringUtils.toUnixSeparatedPath(gameFolder.getAbsolutePath + File.separator + settings.gameAssemblyFromInstall))
         Try {
           Settings.save(Constants.settingsFileLocation)(newSettings)
         }.recover {
