@@ -6,7 +6,7 @@ import java.io.File
 import ca.mktsk.modsenfree.exceptions.{Exceptions, NotDirectoryException, SettingsLoadException}
 import ca.mktsk.modsenfree.io.{FileIO, Interop, PatcherMessage}
 import ca.mktsk.modsenfree.mod.ObservableMod
-import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Settings, Task}
+import ca.mktsk.modsenfree.utils.{Constants, JsonUtils, Settings, StringUtils, Task}
 import javafx.application.Platform
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.event.ActionEvent
@@ -246,14 +246,14 @@ class ModsenfreeGUI {
     Option[File](directoryChooser.showDialog(rootPane.getScene.getWindow))
       .foreach(gameFolder => {
         val newSettings = settings
-          .set("gameInstallLocation", gameFolder.getAbsolutePath)
-          .set("gameAssembly", gameFolder.getAbsolutePath + settings.gameAssemblyFromInstall)
+          .set("gameInstallLocation", StringUtils.toUnixSeparatedPath(gameFolder.getAbsolutePath))
+          .set("gameAssembly", StringUtils.toUnixSeparatedPath(gameFolder.getAbsolutePath + settings.gameAssemblyFromInstall))
         Try {
           Settings.save(Constants.settingsFileLocation)(newSettings)
         }.recover {
           case throwable: Throwable => errorAlert("Failed to save settings changes")
         }.map(_ => initialize())
-        println(gameFolder)
+        println("abs path: " + gameFolder.getAbsolutePath)
       })
   }
 
