@@ -98,7 +98,11 @@ class ModsenfreeGUI {
   private def patchButtonText(isPatched: Boolean): String =
     if (isPatched) settings.patchButtonUnpatchText else settings.patchButtonPatchText
 
-  private def isPatched = Interop.isPatched(settings.patcherExecutable, settings.gameAssembly)
+  private def isPatched = {
+    val p = Interop.isPatched(settings)()
+    println("isPatched " + p)
+    p
+  }
 
   def refreshPatchButton(): Unit = {
     val refreshJob = Task {
