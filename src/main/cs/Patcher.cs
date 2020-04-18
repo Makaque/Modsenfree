@@ -139,13 +139,10 @@ public class CmdArgs
         }
         if (!File.Exists(gameAssemblyInFilename)){
             response = Response.MISSING_GAME_ASSEMBLY_ERROR;
-            // throw new Exception("game not exists");
         }
         if(!File.Exists(patchAssemblyFilename)){
             response = Response.MISSING_PATCH_ASSEMBLY_ERROR;
-            // throw new Exception("patch not found");
         }
-        // Console.WriteLine(File.Exists(patchAssemblyFilename) ? "patch exists." : "patch does not exist.");
         PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyInFilename, gameClassInjectionSite, gameMethodInjectionSite);
         PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
         return (response, new CmdArgs(command, gamePatchLocation, patchToInjectLocation, gameAssemblyOutFilename, resolver));
@@ -164,9 +161,7 @@ public class Patcher
 
         try{
             String backupFileName = App.getBackupFileName(cmdArgs.gamePatchLocation.assemblyFilename);
-            // Console.WriteLine(backupFileName);
             if(!File.Exists(backupFileName)){
-                // Console.WriteLine("file doesn't exist");
                 File.Copy(cmdArgs.gamePatchLocation.assemblyFilename, backupFileName);
             }
         } catch (Exception){
@@ -225,12 +220,10 @@ public class Patcher
 
         try{
             String hookName = patchPatchDefinition.methodDefinition.Name;
-            // Console.WriteLine(hookName);
             foreach(Instruction instruction in gamePatchDefinition.methodDefinition.Body.Instructions){
                 if(instruction.OpCode == OpCodes.Call){
                     MethodReference methodReference = instruction.Operand as MethodReference;
                     if(methodReference != null){
-                        // Console.WriteLine(methodReference.Name);
                         if(methodReference.Name == hookName){
                             return Response.IS_PATCHED_TRUE;
                         }
