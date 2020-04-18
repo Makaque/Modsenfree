@@ -11,7 +11,7 @@ public class AssemblyReadException : Exception { }
 
 public enum Response
 {
-    PARSE_SUCCESS, // Only used internally
+    OP_SUCCESS, // Only used internally
     PATCH_SUCCESS,
     UNPATCH_SUCCESS,
     IS_PATCHED_TRUE,
@@ -23,6 +23,7 @@ public enum Response
     MISSING_ASSEMBLY_ERROR,
     ASSEMBLY_READ_ERROR,
     GAME_ASSEMBLY_READ_ERROR,
+    GAME_ASSEMBLY_BACKUP_ERROR,
     PATCH_ASSEMBLY_READ_ERROR,
     INJECTION_ERROR,
     REPEAT_OPERATION_ERROR,
@@ -124,7 +125,7 @@ public class CmdArgs
         {
             throw new TooFewArgumentsException();
         }
-        Response response = Response.PARSE_SUCCESS;
+        Response response = Response.OP_SUCCESS;
         string gameAssemblyInFilename = args[1];
         string gameAssemblyOutFilename = args[2];
         string gameClassInjectionSite = args[3];
@@ -156,84 +157,91 @@ public class Patcher
 {
     public static Response patch(CmdArgs cmdArgs)
     {
-            PatchMethodDefinition gamePatchDefinition = null;
-            PatchMethodDefinition patchPatchDefinition = null;
-            try{
-                gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition(cmdArgs.resolver);
-            } catch (Exception){
-                return Response.GAME_ASSEMBLY_READ_ERROR;
-            }
+        (Response response, PatchMethodDefinition gamePatchDefinition, PatchMethodDefinition patchPatchDefinition) = loadPatchDefinitions(cmdArgs);
+        if(response != Response.OP_SUCCESS){
+            return response;
+        }
 
-            try{
-                patchPatchDefinition = cmdArgs.patchToInjectLocation.patchMethodDefinition(cmdArgs.resolver);
-            } catch (Exception){
-                return Response.PATCH_ASSEMBLY_READ_ERROR;
+        try{
+            String backupFileName = App.getBackupFileName(cmdArgs.gamePatchLocation.assemblyFilename);
+            // Console.WriteLine(backupFileName);
+            if(!File.Exists(backupFileName)){
+                // Console.WriteLine("file doesn't exist");
+                File.Copy(cmdArgs.gamePatchLocation.assemblyFilename, backupFileName);
             }
+        } catch (Exception){
+            return Response.GAME_ASSEMBLY_BACKUP_ERROR;
+        }
 
-            try{
-                gamePatchDefinition.methodDefinition.InjectWith(
-                    patchPatchDefinition.methodDefinition,
-                    flags: InjectFlags.None
-                );
-                
-                // gamePatchDefinition.assemblyDefinition.Write (Path.GetDirectoryName(cmdArgs.gamePatchLocation.assemblyFilename) + "/" + cmdArgs.gameAssemblyOutFilename);
-                // File.WriteAllText(Path.GetDirectoryName(cmdArgs.gameAssemblyOutFilename) + "/-patched.txt", "");
-            } catch (Exception){ 
-                return Response.INJECTION_ERROR;
-            }
-                gamePatchDefinition.assemblyDefinition.Write (cmdArgs.gameAssemblyOutFilename);
-            return Response.PATCH_SUCCESS;
+        try{
+
+            gamePatchDefinition.methodDefinition.InjectWith(
+                patchPatchDefinition.methodDefinition,
+                flags: InjectFlags.None
+            );
+            
+            gamePatchDefinition.assemblyDefinition.Write (cmdArgs.gameAssemblyOutFilename);
+
+        } catch (Exception){ 
+            return Response.INJECTION_ERROR;
+        }
+        return Response.PATCH_SUCCESS;
+    }
+
+    private static (Response, PatchMethodDefinition, PatchMethodDefinition) loadPatchDefinitions(CmdArgs cmdArgs){
+        PatchMethodDefinition gamePatchDefinition = null;
+        PatchMethodDefinition patchPatchDefinition = null;
+
+        try{
+            gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition(cmdArgs.resolver);
+        } catch (Exception){
+            return (Response.GAME_ASSEMBLY_READ_ERROR, null, null);
+        }
+
+        try{
+            patchPatchDefinition = cmdArgs.patchToInjectLocation.patchMethodDefinition(cmdArgs.resolver);
+        } catch (Exception){
+            return (Response.PATCH_ASSEMBLY_READ_ERROR, null, null);
+        }
+
+        return (Response.OP_SUCCESS, gamePatchDefinition, patchPatchDefinition);
+
+
     }
 
     public static Response unpatch(CmdArgs cmdArgs)
     {
-        return Response.UNIMPLEMENTED_ERROR;
+        String backupFileName = App.getBackupFileName(cmdArgs.gamePatchLocation.assemblyFilename);
+        File.Copy(backupFileName, cmdArgs.gamePatchLocation.assemblyFilename, true);
+        return Response.UNPATCH_SUCCESS;
     }
 
     public static Response isPatched(CmdArgs cmdArgs)
     {
-            PatchMethodDefinition gamePatchDefinition = null;
-            PatchMethodDefinition patchPatchDefinition = null;
-            try{
-                gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition(cmdArgs.resolver);
-            } catch (Exception){
-                return Response.GAME_ASSEMBLY_READ_ERROR;
-            }
+        (Response response, PatchMethodDefinition gamePatchDefinition, PatchMethodDefinition patchPatchDefinition) = loadPatchDefinitions(cmdArgs);
+        if(response != Response.OP_SUCCESS){
+            return response;
+        }
 
-            try{
-                patchPatchDefinition = cmdArgs.patchToInjectLocation.patchMethodDefinition(cmdArgs.resolver);
-            } catch (Exception){
-                return Response.PATCH_ASSEMBLY_READ_ERROR;
-            }
-
-            try{
-                String hookName = patchPatchDefinition.methodDefinition.Name;
-                // Console.WriteLine(hookName);
-                foreach(Instruction instruction in gamePatchDefinition.methodDefinition.Body.Instructions){
-                    if(instruction.OpCode == OpCodes.Call){
-                        MethodReference methodReference = instruction.Operand as MethodReference;
-                        if(methodReference != null){
-                            // Console.WriteLine(methodReference.Name);
-                            if(methodReference.Name == hookName){
-                                return Response.IS_PATCHED_TRUE;
-                            }
+        try{
+            String hookName = patchPatchDefinition.methodDefinition.Name;
+            // Console.WriteLine(hookName);
+            foreach(Instruction instruction in gamePatchDefinition.methodDefinition.Body.Instructions){
+                if(instruction.OpCode == OpCodes.Call){
+                    MethodReference methodReference = instruction.Operand as MethodReference;
+                    if(methodReference != null){
+                        // Console.WriteLine(methodReference.Name);
+                        if(methodReference.Name == hookName){
+                            return Response.IS_PATCHED_TRUE;
                         }
                     }
-                    return Response.IS_PATCHED_FALSE;
                 }
-            } catch (Exception){ 
-                return Response.INJECTION_ERROR;
+                return Response.IS_PATCHED_FALSE;
             }
-            return Response.PATCH_SUCCESS;
-        // try{
-        //     if(File.Exists(cmdArgs.gameAssemblyOutFilename) + "/patched.txt"){
-        //         return Response.IS_PATCHED_TRUE;
-        //     } else {
-        //         return Response.IS_PATCHED_FALSE;
-        //     }
-        // } catch (Exception e){
-        //     return Response.IS_PATCHED_CHECK_ERROR;
-        // }
+        } catch (Exception){ 
+            return Response.INJECTION_ERROR;
+        }
+        return Response.PATCH_SUCCESS;
     }
 
     public static Response invalidCommand(CmdArgs cmdArgs)
@@ -261,6 +269,14 @@ public class Patcher
 public class App
 {
 
+    public static String getBackupFileName(String fileName){
+        return Path.GetDirectoryName(fileName)
+            + Path.DirectorySeparatorChar
+            + Path.GetFileNameWithoutExtension(fileName)
+            + "-backup"
+            + Path.GetExtension(fileName);
+    }
+
     public static Response exec(Command command, CmdArgs cmdArgs)
     {
         return Patcher.commandFunction(command)(cmdArgs);
@@ -271,7 +287,7 @@ public class App
         // try
         // {
             (Response parseResponse, CmdArgs cmdArgs) = CmdArgs.parse(args);
-            if(parseResponse == Response.PARSE_SUCCESS){
+            if(parseResponse == Response.OP_SUCCESS){
                 if (args.Length > 1)
                 {
                     Response response = exec(cmdArgs.command, cmdArgs);
