@@ -38,6 +38,7 @@ class Settings(val settingsContents: String, private val properties: Properties)
   }
 
   val modSearchDirectory: String = properties.getProperty("modSearchDirectory")
+  val modSearchDirectoryFromInstall: String = properties.getProperty("modSearchDirectoryFromInstall")
   val modDefinitionFilename: String = properties.getProperty("modDefinitionFilename")
   val title: String = properties.getProperty("programTitle")
   val patcherExecutable: String = properties.getProperty("patcherExecutable")
