@@ -9,7 +9,7 @@ object Exceptions {
   }
 
   def filterFailuresWithCause[U, V](list: List[(V, Try[U])]): List[(V, Throwable)] = {
-    list.collect { case (v, Failure(t)) => (v,t) }
+    list.collect { case (v, Failure(t)) => (v, t) }
   }
 
   def filterSuccesses[U](list: List[Try[U]]): List[U] = {
