@@ -11,7 +11,7 @@ SRC="./src/main/cs"
 mkdir -p $HOOK_OUTPUT
 mkdir -p $PATCHER_OUTPUT
 mkdir -p $RUN_OUTPUT
-./Libraries/Mono/bin/mcs $SRC/Patcher.cs -out:$PATCHER_OUTPUT/Patcher.exe -r:$MONO35,$RESOURCES/UnityEngine.dll,$RESOURCES/Mono.Cecil.dll,$RESOURCES/Mono.Cecil.Inject.dll
+./Libraries/Mono/bin/mcs $SRC/Patcher.cs -out:$PATCHER_OUTPUT/Patcher.exe -r:$MONO35,$RESOURCES/Mono.Cecil.dll,$RESOURCES/Mono.Cecil.Inject.dll
 ./Libraries/Mono/bin/mcs -langversion:ISO-2 $SRC/Hook.cs -out:$HOOK_OUTPUT/Hook.dll -t:library -r:$MONO35,$RESOURCES/0Harmony.dll,$RESOURCES/Assembly-CSharp.dll
 cp $RESOURCES/Mono.Cecil.dll $PATCHER_OUTPUT/
 cp $RESOURCES/Mono.Cecil.Inject.dll $PATCHER_OUTPUT/

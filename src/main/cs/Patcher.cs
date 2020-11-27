@@ -1,4 +1,3 @@
-// using UnityEngine;
 using System;
 using System.IO;
 using System.Linq;
@@ -103,14 +102,16 @@ public class CmdArgs
     public readonly PatchMethodLocation gamePatchLocation;
     public readonly PatchMethodLocation patchToInjectLocation;
     public readonly string gameAssemblyOutFilename;
+    public readonly string gameResolver;
     public readonly string resolver; 
 
-    CmdArgs(Command command, PatchMethodLocation gamePatchLocation, PatchMethodLocation patchToInjectLocation, string gameAssemblyOutFilename, string resolver = null)
+    CmdArgs(Command command, PatchMethodLocation gamePatchLocation, PatchMethodLocation patchToInjectLocation, string gameAssemblyOutFilename, string gameResolver, string resolver = null)
     {
         this.command = command;
         this.gamePatchLocation = gamePatchLocation;
         this.patchToInjectLocation = patchToInjectLocation;
         this.gameAssemblyOutFilename = gameAssemblyOutFilename;
+        this.gameResolver = gameResolver;
         this.resolver = resolver;
     }
 
@@ -133,6 +134,8 @@ public class CmdArgs
         string patchAssemblyFilename = args[5];
         string patchClass = args[6];
         string patchMethod = args[7];
+        // TODO: Take game resolver as argument
+        string gameResolver = new FileInfo(gameAssemblyInFilename).Directory.FullName;
         string resolver = null;
         if(args.Length > 8){
             resolver = args[8];
@@ -145,7 +148,7 @@ public class CmdArgs
         }
         PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyInFilename, gameClassInjectionSite, gameMethodInjectionSite);
         PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
-        return (response, new CmdArgs(command, gamePatchLocation, patchToInjectLocation, gameAssemblyOutFilename, resolver));
+        return (response, new CmdArgs(command, gamePatchLocation, patchToInjectLocation, gameAssemblyOutFilename, gameResolver, resolver));
     }
 
 }
@@ -188,7 +191,7 @@ public class Patcher
         PatchMethodDefinition patchPatchDefinition = null;
 
         try{
-            gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition(cmdArgs.resolver);
+            gamePatchDefinition = cmdArgs.gamePatchLocation.patchMethodDefinition(cmdArgs.gameResolver);
         } catch (Exception){
             return (Response.GAME_ASSEMBLY_READ_ERROR, null, null);
         }
