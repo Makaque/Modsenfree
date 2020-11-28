@@ -40,7 +40,7 @@ This section concerns only files within the `target` directory following
 a full project build. `modsenfree` refers only to the subdirectory within 
 `target`, not the root project directory.
 
-After building the project, the `Hook.dll` file within `modsenfree/hook` should
+After building the project, the files `Hook.dll` and `0Harmony.dll` within `modsenfree/hook` should
 be copied into the `Managed` subdirectory of the Oxenfree install, normally 
 located in `C:\Program Files (x86)\Steam\steamapps\common\Oxenfree\Oxenfree_Data\Managed` 
 for the steam version.
@@ -48,7 +48,9 @@ for the steam version.
 `modsenfree`, containing both `Modsenfree_Standalone_0.1.jar`, the `patcher` directory, and the `hook` directory,
 should be kept anywhere on the system you wish for the install to reside. 
 
-The program can then be run with:
+The program can then be run by double clicking Modsenfree_standalone_0.1.jar or with the command:
 ````
 java -jar /path/to/modsenfree/Modsenfree_standalone_0.1.jar
 ````
+
+Having java runtime v1.8+ is required to use this program.
