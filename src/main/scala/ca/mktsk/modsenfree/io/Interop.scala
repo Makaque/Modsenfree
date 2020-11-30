@@ -24,11 +24,12 @@ object Interop {
       /*[1]*/ settings.gameAssemblyRead,
       /*[2]*/ settings.gameAssemblyWrite,
       /*[3]*/ settings.gameClassToPatch,
-      /*[4]*/ settings.gameMethodToPatch,
-      /*[5]*/ settings.patchAssembly,
-      /*[6]*/ settings.patchClass,
-      /*[7]*/ settings.patchMethod,
-      /*[8]*/ settings.patchDependencyResolver
+      /*[4]*/ settings.gameMethodToPatchName,
+      /*[5]*/ settings.gameMethodToPatchIndex,
+      /*[6]*/ settings.patchAssembly,
+      /*[7]*/ settings.patchClass,
+      /*[8]*/ settings.patchMethod,
+      /*[9]*/ settings.patchDependencyResolver
     ).map(StringUtils.quote)
     println("cmd: " + cmd)
     Process(cmd).!!.trim

@@ -57,16 +57,19 @@ public class PatchMethodLocation
     public readonly string assemblyFilename;
     public readonly string className;
     public readonly string methodName;
+    public readonly int methodIndex;
 
     public readonly string resolver;
 
 
-    public PatchMethodLocation(string assemblyFilename, string className, string methodName)
+    public PatchMethodLocation(string assemblyFilename, string className, string methodName, int methodIndex = 0)
     {
         this.assemblyFilename = assemblyFilename;
         this.className = className;
         this.methodName = methodName;
-        
+        this.methodIndex = methodIndex;
+
+
     }
 
     // Method used to construct a PatchMethodDefinition. This creates and stores an AssemblyDefinition
@@ -85,7 +88,7 @@ public class PatchMethodLocation
                 assemblyDefn = AssemblyDefinition.ReadAssembly(assemblyFilename);
             }
             TypeDefinition classDefn = assemblyDefn.MainModule.GetType(className);
-            MethodDefinition methodDefn = classDefn.GetMethod(methodName);
+            MethodDefinition methodDefn = classDefn.GetMethods(methodName)[methodIndex];
             return new PatchMethodDefinition(assemblyDefn, methodDefn);
         // }
         // catch (Exception)
@@ -130,10 +133,11 @@ public class CmdArgs
         string gameAssemblyInFilename = args[1];
         string gameAssemblyOutFilename = args[2];
         string gameClassInjectionSite = args[3];
-        string gameMethodInjectionSite = args[4];
-        string patchAssemblyFilename = args[5];
-        string patchClass = args[6];
-        string patchMethod = args[7];
+        string gameMethodNameInjectionSite = args[4];
+        int gameMethodIndexInjectionSite = Int32.Parse(args[5]);
+        string patchAssemblyFilename = args[6];
+        string patchClass = args[7];
+        string patchMethod = args[8];
         // TODO: Take game resolver as argument
         string gameResolver = new FileInfo(gameAssemblyInFilename).Directory.FullName;
         string resolver = null;
@@ -146,7 +150,7 @@ public class CmdArgs
         if(!File.Exists(patchAssemblyFilename)){
             response = Response.MISSING_PATCH_ASSEMBLY_ERROR;
         }
-        PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyInFilename, gameClassInjectionSite, gameMethodInjectionSite);
+        PatchMethodLocation gamePatchLocation = new PatchMethodLocation(gameAssemblyInFilename, gameClassInjectionSite, gameMethodNameInjectionSite, gameMethodIndexInjectionSite);
         PatchMethodLocation patchToInjectLocation = new PatchMethodLocation(patchAssemblyFilename, patchClass, patchMethod);
         return (response, new CmdArgs(command, gamePatchLocation, patchToInjectLocation, gameAssemblyOutFilename, gameResolver, resolver));
     }
